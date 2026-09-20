@@ -27,6 +27,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     implementation("androidx.navigation3:navigation3-runtime:1.0.1")
     implementation("androidx.navigation3:navigation3-ui:1.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")

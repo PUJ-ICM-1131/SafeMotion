@@ -1,5 +1,34 @@
 <resources>
     <string name="app_name">Safe Motion</string>
     <string name="app_tagline">Nunca entrenas solo</string>
-    <string name="initial_screen_message">Estamos preparando las pantallas de la aplicación.</string>
+    <string name="sign_in">Ingresar</string>
+    <string name="register">Registrarme</string>
+    <string name="create_account">Crear cuenta</string>
+    <string name="full_name">Nombre completo</string>
+    <string name="phone">Celular</string>
+    <string name="email">Correo</string>
+    <string name="password">Contraseña</string>
+    <string name="show_password">Mostrar</string>
+    <string name="hide_password">Ocultar</string>
+    <string name="forgot_password">¿Olvidaste tu contraseña?</string>
+    <string name="recover_title">Recuperar contraseña</string>
+    <string name="recover_description">Escribe tu correo para recibir un enlace de recuperación.</string>
+    <string name="send_recovery_link">Enviar enlace</string>
+    <string name="back_to_sign_in">Volver a ingresar</string>
+    <string name="recovery_sent">Enlace enviado. Revisa tu correo. Esta es una simulación.</string>
+    <string name="error_missing_fields">Completa todos los campos.</string>
+    <string name="error_invalid_email">Escribe un correo válido.</string>
+    <string name="error_short_password">La contraseña debe tener al menos 8 caracteres.</string>
+    <string name="error_invalid_credentials">Correo o contraseña incorrectos.</string>
+    <string name="error_existing_email">Ya hay una cuenta con ese correo.</string>
+    <string name="demo_account">Cuenta de prueba: mariana.rojas@correo.com / clave1234</string>
+    <string name="hello_user">Hola, %1$s</string>
+    <string name="sign_out">Salir</string>
+    <string name="home_safety_title">Tu seguridad hoy</string>
+    <plurals name="accepted_guardians">
+        <item quantity="one">%1$d guardián aceptado</item>
+        <item quantity="other">%1$d guardianes aceptados</item>
+    </plurals>
+    <string name="last_run_distance">%1$s km en el último recorrido</string>
+    <string name="mock_sensor_status">GPS disponible · Sensores listos (datos simulados)</string>
 </resources>
