@@ -31,4 +31,27 @@
     </plurals>
     <string name="last_run_distance">%1$s km en el último recorrido</string>
     <string name="mock_sensor_status">GPS disponible · Sensores listos (datos simulados)</string>
+    <string name="prepare_run">Preparar recorrido</string>
+    <string name="back_to_home">Volver al inicio</string>
+    <string name="prepare_run_title">Preparar recorrido</string>
+    <string name="activity_type">Tipo de actividad</string>
+    <string name="activity_running">Correr</string>
+    <string name="activity_cycling">Ciclismo</string>
+    <string name="select_guardians">Selecciona tus guardianes</string>
+    <string name="guardian_required">Selecciona al menos un guardián para iniciar.</string>
+    <string name="run_mock_notice">El recorrido, el GPS y los sensores se simulan en esta entrega.</string>
+    <string name="start_run">Iniciar recorrido</string>
+    <string name="active_run_title">Recorrido activo</string>
+    <string name="run_time">Tiempo: %1$s</string>
+    <string name="run_distance">Distancia: %1$s km</string>
+    <string name="run_guardians_connected">Guardianes conectados: %1$d</string>
+    <string name="run_gps_mock">GPS disponible (simulado)</string>
+    <string name="run_sensors_mock">Sensores activos (simulados)</string>
+    <string name="incident_demo_title">Probar una alerta</string>
+    <string name="simulate_fall">Simular caída</string>
+    <string name="simulate_inactivity">Simular inactividad</string>
+    <string name="finish_run">Finalizar recorrido</string>
+    <string name="finish_run_confirmation">¿Quieres finalizar este recorrido?</string>
+    <string name="confirm_finish">Sí, finalizar</string>
+    <string name="keep_running">Seguir en el recorrido</string>
 </resources>
