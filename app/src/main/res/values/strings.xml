@@ -62,4 +62,44 @@
     <string name="cancel_alert">Estoy bien, cancelar alerta</string>
     <string name="alert_sent_mock">Alerta confirmada. Los guardianes recibieron un aviso simulado con tu última ubicación.</string>
     <string name="return_to_run">Volver al recorrido</string>
+
+    <!-- Guardianes (HU-02) -->
+    <string name="guardians_title">Guardianes</string>
+    <string name="guardians_subtitle">Las personas que te acompañan cuando sales a entrenar.</string>
+    <string name="guardian_status_accepted">Aceptada</string>
+    <string name="guardian_status_pending">Pendiente</string>
+    <string name="guardian_status_rejected">Rechazada</string>
+    <string name="guardians_location_notice">Solo los guardianes con invitación aceptada pueden ver tu ubicación.</string>
+    <string name="invite">Invitar</string>
+    <string name="invite_contact">Invitar contacto</string>
+    <string name="guardians_empty_title">Todavía no tienes guardianes</string>
+    <string name="guardians_empty_description">Invita a alguien de confianza para que vea tu ubicación mientras entrenas y reciba la alerta si te pasa algo.</string>
+    <string name="invite_guardians_title">Invitar guardianes</string>
+    <string name="search_contacts">Buscar en tus contactos</string>
+    <string name="close">Cerrar</string>
+    <plurals name="selected_contacts">
+        <item quantity="one">%1$d seleccionado</item>
+        <item quantity="other">%1$d seleccionados</item>
+    </plurals>
+    <plurals name="send_invitations">
+        <item quantity="one">Enviar %1$d invitación</item>
+        <item quantity="other">Enviar %1$d invitaciones</item>
+    </plurals>
+    <plurals name="invitations_sent">
+        <item quantity="one">Invitación enviada</item>
+        <item quantity="other">%1$d invitaciones enviadas</item>
+    </plurals>
+
+    <!-- Invitaciones recibidas (HU-03) -->
+    <string name="invitations_title">Invitaciones recibidas</string>
+    <string name="invitations_subtitle">Si aceptas, verás la ubicación de esa persona mientras entrena y te avisaremos si tiene un incidente.</string>
+    <string name="accept">Aceptar</string>
+    <string name="reject">Rechazar</string>
+    <string name="invitation_detail">%1$s · %2$s</string>
+    <string name="invitation_accepted">Aceptaste acompañar a %1$s</string>
+    <string name="invitation_rejected">Rechazaste la invitación de %1$s</string>
+    <string name="undo">Deshacer</string>
+    <string name="invitations_empty_title">No tienes invitaciones</string>
+    <string name="invitations_empty_description">Cuando alguien te invite a ser su guardián, la invitación aparecerá aquí.</string>
+    <string name="back">Volver</string>
 </resources>
