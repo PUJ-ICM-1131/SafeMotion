@@ -54,4 +54,12 @@
     <string name="finish_run_confirmation">¿Quieres finalizar este recorrido?</string>
     <string name="confirm_finish">Sí, finalizar</string>
     <string name="keep_running">Seguir en el recorrido</string>
+    <string name="incident_alert_title">Posible incidente detectado</string>
+    <string name="incident_fall">Caída simulada</string>
+    <string name="incident_inactivity">Inactividad simulada</string>
+    <string name="alert_countdown">%1$d s</string>
+    <string name="alert_countdown_explanation">Cancela la alerta si estás bien. Al llegar a cero se avisará a los guardianes en esta simulación.</string>
+    <string name="cancel_alert">Estoy bien, cancelar alerta</string>
+    <string name="alert_sent_mock">Alerta confirmada. Los guardianes recibieron un aviso simulado con tu última ubicación.</string>
+    <string name="return_to_run">Volver al recorrido</string>
 </resources>
