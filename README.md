@@ -32,3 +32,5 @@ Desde Inicio, entra a Preparar recorrido. Elige correr o ciclismo y al menos un 
 4. Navegación, pruebas y conexión con Inicio.
 
 `MockRunRepository.availableGuardians` es una lista temporal: Juan Diego puede sustituirla al integrar su módulo. `completedRuns` y `confirmedIncidents` quedan disponibles para el historial y la alerta recibida que harán Samuel y el equipo. Aquí no hay GPS, sensores ni notificaciones reales.
+
+Las tres pantallas de este flujo comparten `RunViewModel` para conservar el reloj y la cuenta regresiva mientras se navega entre ellas. Al actualizar la wiki, conviene reflejar esta decisión en la tabla de pantallas y ViewModel.

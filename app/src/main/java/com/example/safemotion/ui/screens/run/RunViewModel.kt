@@ -32,6 +32,7 @@ class RunViewModel : ViewModel() {
 
     fun toggleGuardian(id: Int) {
         if (_uiState.value.phase != RunPhase.PREPARING) return
+        if (_uiState.value.guardians.none { it.id == id }) return
         _uiState.update { state ->
             val selected = if (id in state.selectedGuardianIds) {
                 state.selectedGuardianIds - id
