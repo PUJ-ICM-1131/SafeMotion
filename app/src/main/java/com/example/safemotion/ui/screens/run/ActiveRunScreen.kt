@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import com.example.safemotion.R
 import com.example.safemotion.data.model.IncidentType
 import com.example.safemotion.data.model.RunActivityType
-import java.util.Locale
 
 @Composable
 fun ActiveRunScreen(
@@ -36,11 +35,6 @@ fun ActiveRunScreen(
 ) {
     val session = uiState.session ?: return
     var showFinishConfirmation by rememberSaveable { mutableStateOf(false) }
-    val elapsed = String.format(
-        Locale.getDefault(), "%02d:%02d", session.elapsedSeconds / 60, session.elapsedSeconds % 60
-    )
-    val distance = String.format(Locale.getDefault(), "%.2f", session.distanceKm)
-
     Scaffold(modifier = modifier) { innerPadding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(innerPadding).padding(24.dp),
@@ -67,8 +61,14 @@ fun ActiveRunScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(stringResource(R.string.run_time, elapsed))
-                        Text(stringResource(R.string.run_distance, distance))
+                        Text(
+                            stringResource(
+                                R.string.run_time,
+                                session.elapsedSeconds / 60,
+                                session.elapsedSeconds % 60
+                            )
+                        )
+                        Text(stringResource(R.string.run_distance, session.distanceKm))
                     }
                     Text(stringResource(R.string.run_guardians_connected, session.guardianIds.size))
                     Text(stringResource(R.string.run_gps_mock))

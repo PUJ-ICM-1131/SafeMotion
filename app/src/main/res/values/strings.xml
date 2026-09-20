@@ -42,8 +42,8 @@
     <string name="run_mock_notice">El recorrido, el GPS y los sensores se simulan en esta entrega.</string>
     <string name="start_run">Iniciar recorrido</string>
     <string name="active_run_title">Recorrido activo</string>
-    <string name="run_time">Tiempo: %1$s</string>
-    <string name="run_distance">Distancia: %1$s km</string>
+    <string name="run_time">Tiempo: %1$02d:%2$02d</string>
+    <string name="run_distance">Distancia: %1$.2f km</string>
     <string name="run_guardians_connected">Guardianes conectados: %1$d</string>
     <string name="run_gps_mock">GPS disponible (simulado)</string>
     <string name="run_sensors_mock">Sensores activos (simulados)</string>

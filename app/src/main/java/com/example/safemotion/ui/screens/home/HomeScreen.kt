@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -23,6 +24,7 @@ import com.example.safemotion.R
 fun HomeScreen(
     uiState: HomeUiState,
     onSignOut: () -> Unit,
+    onPrepareRun: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(modifier = modifier) { innerPadding ->
@@ -72,6 +74,9 @@ fun HomeScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Button(onClick = onPrepareRun, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.prepare_run))
+            }
         }
     }
 }

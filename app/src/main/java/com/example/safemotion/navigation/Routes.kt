@@ -8,3 +8,12 @@ data object AuthRoute : NavKey
 
 @Serializable
 data object HomeRoute : NavKey
+
+@Serializable
+data object PrepareRunRoute : NavKey
+
+@Serializable
+data object ActiveRunRoute : NavKey
+
+@Serializable
+data object IncidentAlertRoute : NavKey

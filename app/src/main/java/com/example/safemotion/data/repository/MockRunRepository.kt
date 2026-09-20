@@ -63,4 +63,10 @@ object MockRunRepository {
             )
         ) + _confirmedIncidents.value
     }
+
+    fun clearForSignOut() {
+        _activeRun.value = null
+        _completedRuns.value = emptyList()
+        _confirmedIncidents.value = emptyList()
+    }
 }
