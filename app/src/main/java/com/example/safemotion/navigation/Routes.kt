@@ -17,3 +17,12 @@ data object ActiveRunRoute : NavKey
 
 @Serializable
 data object IncidentAlertRoute : NavKey
+
+@Serializable
+data object GuardiansRoute : NavKey
+
+@Serializable
+data object SelectContactsRoute : NavKey
+
+@Serializable
+data object InvitationsRoute : NavKey

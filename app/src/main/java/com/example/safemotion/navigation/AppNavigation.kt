@@ -15,6 +15,11 @@ import com.example.safemotion.ui.screens.auth.AuthScreen
 import com.example.safemotion.ui.screens.auth.AuthViewModel
 import com.example.safemotion.ui.screens.home.HomeScreen
 import com.example.safemotion.ui.screens.home.HomeViewModel
+import com.example.safemotion.ui.screens.guardians.GuardiansScreen
+import com.example.safemotion.ui.screens.guardians.GuardiansViewModel
+import com.example.safemotion.ui.screens.guardians.SelectContactsScreen
+import com.example.safemotion.ui.screens.invitations.InvitationsScreen
+import com.example.safemotion.ui.screens.invitations.InvitationsViewModel
 import com.example.safemotion.ui.screens.run.ActiveRunScreen
 import com.example.safemotion.ui.screens.run.IncidentAlertScreen
 import com.example.safemotion.ui.screens.run.PrepareRunScreen
@@ -25,6 +30,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val backStack = rememberNavBackStack(AuthRoute)
     val authViewModel: AuthViewModel = viewModel()
     val runViewModel: RunViewModel = viewModel()
+    val guardiansViewModel: GuardiansViewModel = viewModel()
+    val invitationsViewModel: InvitationsViewModel = viewModel()
     LaunchedEffect(Unit) {
         if (MockAuthRepository.currentUser == null && backStack.lastOrNull() != AuthRoute) {
             backStack.clear()
@@ -124,6 +131,45 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         onReturnToRun = {
                             if (runViewModel.returnToRun()) backStack.removeLastOrNull()
                         }
+                    )
+                }
+                GuardiansRoute -> NavEntry(key) {
+                    val uiState by guardiansViewModel.uiState.collectAsStateWithLifecycle()
+                    LaunchedEffect(Unit) {
+                        guardiansViewModel.refresh()
+                    }
+                    GuardiansScreen(
+                        uiState = uiState,
+                        onInvite = { backStack.add(SelectContactsRoute) }
+                    )
+                }
+                SelectContactsRoute -> NavEntry(key) {
+                    val uiState by guardiansViewModel.uiState.collectAsStateWithLifecycle()
+                    SelectContactsScreen(
+                        uiState = uiState,
+                        onQueryChange = guardiansViewModel::changeSearchQuery,
+                        onToggleContact = guardiansViewModel::toggleContact,
+                        onSend = {
+                            if (guardiansViewModel.sendInvitations()) {
+                                backStack.removeLastOrNull()
+                            }
+                        },
+                        onClose = {
+                            guardiansViewModel.clearSelection()
+                            backStack.removeLastOrNull()
+                        }
+                    )
+                }
+                InvitationsRoute -> NavEntry(key) {
+                    val uiState by invitationsViewModel.uiState.collectAsStateWithLifecycle()
+                    LaunchedEffect(Unit) {
+                        invitationsViewModel.refresh()
+                    }
+                    InvitationsScreen(
+                        uiState = uiState,
+                        onRespond = { id -> invitationsViewModel.respond(id) },
+                        onUndo = invitationsViewModel::undoResponse,
+                        onBack = { backStack.removeLastOrNull() }
                     )
                 }
                 else -> error("Ruta no registrada: $key")
