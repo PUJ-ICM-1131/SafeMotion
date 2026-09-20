@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Safe Motion</string>
+    <string name="app_tagline">Nunca entrenas solo</string>
+    <string name="initial_screen_message">Estamos preparando las pantallas de la aplicación.</string>
+</resources>
