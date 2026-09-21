@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fondo del mapa simulado (tema oscuro) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="640dp"
+    android:viewportWidth="360"
+    android:viewportHeight="640">
+    <path android:fillColor="#2A2A31" android:pathData="M0,0h360v640h-360z" />
+    <path android:fillColor="#22382B" android:pathData="M168,258L236,262L238,344L170,342Z" />
+    <path android:fillColor="#1B1B22" android:pathData="M41,0L55,0L61,640L47,640Z" />
+    <path android:fillColor="#1B1B22" android:pathData="M145,0L159,0L155,640L141,640Z" />
+    <path android:fillColor="#1B1B22" android:pathData="M247,0L261,0L269,640L255,640Z" />
+    <path android:fillColor="#1B1B22" android:pathData="M327,0L341,0L345,640L331,640Z" />
+    <path android:fillColor="#1B1B22" android:pathData="M0,113L360,123L360,137L0,127Z" />
+    <path android:fillColor="#1B1B22" android:pathData="M0,233L360,225L360,239L0,247Z" />
+    <path android:fillColor="#1B1B22" android:pathData="M0,353L360,365L360,379L0,367Z" />
+    <path android:fillColor="#1B1B22" android:pathData="M0,463L360,457L360,471L0,477Z" />
+    <path android:fillColor="#1B1B22" android:pathData="M0,573L360,581L360,595L0,587Z" />
+</vector>
