@@ -26,3 +26,10 @@ data object SelectContactsRoute : NavKey
 
 @Serializable
 data object InvitationsRoute : NavKey
+
+
+@Serializable
+data object RiskMapRoute : NavKey
+
+@Serializable
+data object ReportRiskRoute : NavKey

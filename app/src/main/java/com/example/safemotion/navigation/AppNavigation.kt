@@ -24,6 +24,10 @@ import com.example.safemotion.ui.screens.run.ActiveRunScreen
 import com.example.safemotion.ui.screens.run.IncidentAlertScreen
 import com.example.safemotion.ui.screens.run.PrepareRunScreen
 import com.example.safemotion.ui.screens.run.RunViewModel
+import com.example.safemotion.ui.screens.reportrisk.ReportRiskScreen
+import com.example.safemotion.ui.screens.reportrisk.ReportRiskViewModel
+import com.example.safemotion.ui.screens.riskmap.RiskMapScreen
+import com.example.safemotion.ui.screens.riskmap.RiskMapViewModel
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -32,6 +36,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val runViewModel: RunViewModel = viewModel()
     val guardiansViewModel: GuardiansViewModel = viewModel()
     val invitationsViewModel: InvitationsViewModel = viewModel()
+    val riskMapViewModel: RiskMapViewModel = viewModel()
+    val reportRiskViewModel: ReportRiskViewModel = viewModel()
     LaunchedEffect(Unit) {
         if (MockAuthRepository.currentUser == null && backStack.lastOrNull() != AuthRoute) {
             backStack.clear()
@@ -170,6 +176,39 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         onRespond = { id -> invitationsViewModel.respond(id) },
                         onUndo = invitationsViewModel::undoResponse,
                         onBack = { backStack.removeLastOrNull() }
+                    )
+                }
+                RiskMapRoute -> NavEntry(key) {
+                    val uiState by riskMapViewModel.uiState.collectAsStateWithLifecycle()
+                    LaunchedEffect(Unit) {
+                        riskMapViewModel.refresh()
+                    }
+                    RiskMapScreen(
+                        uiState = uiState,
+                        onZoneSelected = riskMapViewModel::selectZone,
+                        onDismissZone = riskMapViewModel::dismissZone,
+                        onConfirmZone = riskMapViewModel::confirmZone,
+                        onReport = { backStack.add(ReportRiskRoute) }
+                    )
+                }
+                ReportRiskRoute -> NavEntry(key) {
+                    val uiState by reportRiskViewModel.uiState.collectAsStateWithLifecycle()
+                    LaunchedEffect(Unit) {
+                        reportRiskViewModel.prepareNewReport()
+                    }
+                    ReportRiskScreen(
+                        uiState = uiState,
+                        onCategorySelected = reportRiskViewModel::selectCategory,
+                        onDescriptionChange = reportRiskViewModel::changeDescription,
+                        onUseCurrentLocation = reportRiskViewModel::useCurrentLocation,
+                        onAttachPhoto = reportRiskViewModel::attachPhoto,
+                        onRemovePhoto = reportRiskViewModel::removePhoto,
+                        onSubmit = reportRiskViewModel::submit,
+                        onReportSent = { backStack.removeLastOrNull() },
+                        onClose = {
+                            reportRiskViewModel.reset()
+                            backStack.removeLastOrNull()
+                        }
                     )
                 }
                 else -> error("Ruta no registrada: $key")

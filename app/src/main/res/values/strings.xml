@@ -102,4 +102,46 @@
     <string name="invitations_empty_title">No tienes invitaciones</string>
     <string name="invitations_empty_description">Cuando alguien te invite a ser su guardián, la invitación aparecerá aquí.</string>
     <string name="back">Volver</string>
+
+
+    <!-- Mapa de riesgos (HU-09) -->
+    <string name="risk_map_title">Zonas de riesgo</string>
+    <string name="risk_map_description">Mapa simulado con las zonas de riesgo reportadas por la comunidad</string>
+    <string name="risk_search_hint">Buscar un sector de Bogotá</string>
+    <string name="risk_legend_title">Leyenda</string>
+    <string name="risk_legend_item">%1$s (%2$d)</string>
+    <string name="risk_category_lighting">Mala iluminación</string>
+    <string name="risk_category_insecurity">Inseguridad</string>
+    <string name="risk_category_bad_road">Vía en mal estado</string>
+    <string name="risk_category_heavy_traffic">Tráfico pesado</string>
+    <string name="risk_report_short">Reportar</string>
+    <string name="risk_reported_by">Reportado por %1$s</string>
+    <string name="risk_evidence_label">foto evidencia %1$d</string>
+    <string name="risk_confirm">Confirmar</string>
+    <string name="risk_confirmed">Confirmado</string>
+    <plurals name="risk_confirmations">
+        <item quantity="one">%1$d persona lo confirmó</item>
+        <item quantity="other">%1$d personas lo confirmaron</item>
+    </plurals>
+    <string name="risk_no_confirmations">Aún nadie lo ha confirmado</string>
+
+    <!-- Reporte de riesgos (HU-10) -->
+    <string name="report_risk_title">Reportar riesgo</string>
+    <string name="report_category">Categoría</string>
+    <string name="report_description">Descripción</string>
+    <string name="report_description_hint">Cuéntanos qué viste y a qué hora</string>
+    <string name="report_location">Ubicación</string>
+    <string name="report_use_current_location">Usar mi ubicación actual</string>
+    <string name="report_photo_required">Foto (obligatoria)</string>
+    <string name="report_no_photo">Sin foto todavía</string>
+    <string name="report_photo_error">Necesitamos una foto para publicar el reporte</string>
+    <string name="report_take_photo">Tomar foto</string>
+    <string name="report_gallery">Galería</string>
+    <string name="report_photo_camera_mock">Foto tomada · simulada</string>
+    <string name="report_photo_gallery_mock">Foto de la galería · simulada</string>
+    <string name="report_remove_photo">Quitar foto</string>
+    <string name="report_incomplete_hint">Completa categoría, descripción, ubicación y foto</string>
+    <string name="report_send">Enviar reporte</string>
+    <string name="report_sent">Reporte enviado. Gracias por avisar.</string>
+    <string name="report_view">Ver</string>
 </resources>
