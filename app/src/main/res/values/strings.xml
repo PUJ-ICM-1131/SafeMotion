@@ -144,4 +144,73 @@
     <string name="report_send">Enviar reporte</string>
     <string name="report_sent">Reporte enviado. Gracias por avisar.</string>
     <string name="report_view">Ver</string>
+
+    <!-- Monitoreo del guardián (HU-05) -->
+    <string name="monitoring_title">Monitoreo del guardián</string>
+    <string name="monitoring_live_location">Ubicación en vivo</string>
+    <string name="monitoring_mock_notice">Ubicación y trazado simulados para esta entrega.</string>
+    <string name="monitoring_status_active">En curso</string>
+    <string name="monitoring_status_interrupted">Interrumpida</string>
+    <string name="monitoring_status_finished">Finalizada</string>
+    <string name="monitoring_activity_running">Correr</string>
+    <string name="monitoring_activity_cycling">Ciclismo</string>
+    <string name="monitoring_activity_place">%1$s · %2$s</string>
+    <string name="monitoring_elapsed">Tiempo transcurrido</string>
+    <string name="monitoring_distance">Distancia</string>
+    <string name="monitoring_duration_value">%1$02d:%2$02d</string>
+    <string name="monitoring_distance_value">%1$.1f km</string>
+    <plurals name="monitoring_last_update_seconds">
+        <item quantity="one">Última actualización hace %1$d segundo</item>
+        <item quantity="other">Última actualización hace %1$d segundos</item>
+    </plurals>
+    <plurals name="monitoring_last_update_minutes">
+        <item quantity="one">Sin actualizaciones desde hace %1$d minuto</item>
+        <item quantity="other">Sin actualizaciones desde hace %1$d minutos</item>
+    </plurals>
+    <string name="monitoring_interrupted_alert">Alerta por posible incidente</string>
+    <string name="monitoring_map_description">Mapa simulado de la ruta de %1$s</string>
+    <string name="monitoring_current_location">Ubicación actual simulada</string>
+    <string name="monitoring_call">Llamar a %1$s</string>
+    <string name="monitoring_missing_title">Sesión no disponible</string>
+    <string name="monitoring_missing_description">La sesión terminó o ya no está compartiendo ubicación.</string>
+
+    <!-- Alerta recibida (HU-08) -->
+    <string name="received_alert_title">Alerta de incidente</string>
+    <string name="received_alert_recent">Recibida hace 1 minuto</string>
+    <string name="received_alert_run_in_progress">%1$s · recorrido en curso</string>
+    <string name="received_alert_type_label">Tipo de incidente</string>
+    <string name="received_alert_fall">Posible caída</string>
+    <string name="received_alert_inactivity">Posible inactividad</string>
+    <string name="received_alert_time_label">Hora</string>
+    <string name="received_alert_location_label">Última ubicación</string>
+    <string name="received_alert_open_map">Ver en el mapa</string>
+    <string name="received_alert_call">Llamar a %1$s</string>
+    <string name="received_alert_mock_notice">Alerta y notificación simuladas para esta entrega.</string>
+    <string name="received_alert_missing_title">Alerta no disponible</string>
+    <string name="received_alert_missing_description">No encontramos los datos de esta alerta.</string>
+
+    <!-- Historial de recorridos (HU-11) -->
+    <string name="history_title">Historial</string>
+    <string name="history_run_detail">%1$s · %2$s · %3$.1f km</string>
+    <string name="history_duration_minutes">%1$d min</string>
+    <string name="history_duration_hours">%1$d h %2$d min</string>
+    <string name="history_status_completed">Finalizada sin alertas</string>
+    <string name="history_status_alert">Alerta enviada durante el recorrido</string>
+    <string name="history_status_interrupted">Interrumpida</string>
+    <string name="history_empty_title">Aún no tienes recorridos</string>
+    <string name="history_empty_description">Cuando termines tu primer recorrido con Safe Motion, lo verás aquí con su ruta y estado.</string>
+    <string name="history_start_run">Iniciar recorrido</string>
+    <string name="history_mock_notice">Los recorridos de ejemplo se combinan con los que finalices durante esta sesión.</string>
+    <string name="main_nav_home">Inicio</string>
+    <string name="main_nav_guardians">Guardianes</string>
+    <string name="main_nav_risks">Riesgos</string>
+    <string name="main_nav_history">Historial</string>
+    <string name="home_quick_access">Accesos principales</string>
+    <string name="home_guardians">Administrar guardianes</string>
+    <string name="home_invitations">Invitaciones recibidas</string>
+    <string name="home_monitoring">Sesión que acompaño</string>
+    <string name="home_received_alert">Alerta recibida</string>
+    <string name="home_risk_map">Mapa de riesgos</string>
+    <string name="home_report_risk">Reportar un riesgo</string>
+    <string name="home_history">Ver historial</string>
 </resources>

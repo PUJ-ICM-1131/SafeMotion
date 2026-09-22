@@ -17,7 +17,8 @@ data class CompletedRun(
     val activity: RunActivityType,
     val durationSeconds: Int,
     val distanceKm: Double,
-    val guardianCount: Int
+    val guardianCount: Int,
+    val completedAtMillis: Long = System.currentTimeMillis()
 )
 
 data class ConfirmedIncident(
