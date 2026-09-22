@@ -31,7 +31,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.safemotion.R
 import com.example.safemotion.data.model.IncidentType
-import com.example.safemotion.data.model.RunActivityType
 import java.text.DateFormat
 import java.util.Date
 
