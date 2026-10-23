@@ -136,7 +136,7 @@ object MockRiskRepository {
     }
 
     private fun currentReporter(): String {
-        val parts = MockAuthRepository.currentUser?.name.orEmpty()
+        val parts = FirebaseAuthRepository.currentUser?.name.orEmpty()
             .split(" ")
             .filter { it.isNotBlank() }
         return when {
