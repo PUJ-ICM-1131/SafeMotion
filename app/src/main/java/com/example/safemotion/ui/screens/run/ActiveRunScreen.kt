@@ -78,7 +78,39 @@ fun ActiveRunScreen(
                     }
                     Text(stringResource(R.string.run_guardians_connected, session.guardianIds.size))
                     Text(stringResource(R.string.run_gps_mock))
-                    Text(stringResource(R.string.run_sensors_mock))
+                    Text(
+                        stringResource(
+                            if (uiState.sensorStatus.monitoring) {
+                                R.string.run_sensors_active
+                            } else {
+                                R.string.run_sensors_unavailable
+                            }
+                        )
+                    )
+                    Text(
+                        stringResource(
+                            R.string.run_accelerometer_status,
+                            stringResource(
+                                if (uiState.sensorStatus.accelerometerAvailable) {
+                                    R.string.sensor_available
+                                } else {
+                                    R.string.sensor_unavailable
+                                }
+                            )
+                        )
+                    )
+                    Text(
+                        stringResource(
+                            R.string.run_gyroscope_status,
+                            stringResource(
+                                if (uiState.sensorStatus.gyroscopeAvailable) {
+                                    R.string.sensor_available
+                                } else {
+                                    R.string.sensor_unavailable
+                                }
+                            )
+                        )
+                    )
                 }
             }
             Text(

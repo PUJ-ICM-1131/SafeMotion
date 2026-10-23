@@ -4,6 +4,7 @@ import com.example.safemotion.data.model.IncidentType
 import com.example.safemotion.data.model.RunActivityType
 import com.example.safemotion.data.model.RunGuardian
 import com.example.safemotion.data.model.RunSession
+import com.example.safemotion.data.sensor.SensorStatus
 
 enum class RunPhase { PREPARING, ACTIVE, ALERT }
 
@@ -14,6 +15,7 @@ data class RunUiState(
     val selectedGuardianIds: Set<Int> = emptySet(),
     val needsGuardian: Boolean = false,
     val session: RunSession? = null,
+    val sensorStatus: SensorStatus = SensorStatus(),
     val incidentType: IncidentType? = null,
     val secondsToCancel: Int = 30,
     val alertSent: Boolean = false
