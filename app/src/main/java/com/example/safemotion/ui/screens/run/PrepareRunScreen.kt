@@ -27,13 +27,13 @@ import com.example.safemotion.data.model.RunActivityType
 
 @Composable
 fun PrepareRunScreen(
+    modifier: Modifier = Modifier,
     uiState: RunUiState,
     onActivitySelected: (RunActivityType) -> Unit,
     onGuardianSelected: (Int) -> Unit,
     onPlanRoute: () -> Unit,
     onStartRun: () -> Unit,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    onBack: () -> Unit
 ) {
     Scaffold(modifier = modifier) { innerPadding ->
         Column(

@@ -30,10 +30,10 @@ import com.example.safemotion.data.model.RunActivityType
 
 @Composable
 fun ActiveRunScreen(
+    modifier: Modifier = Modifier,
     uiState: RunUiState,
     onSimulateIncident: (IncidentType) -> Unit,
-    onFinishRun: () -> Unit,
-    modifier: Modifier = Modifier
+    onFinishRun: () -> Unit
 ) {
     val session = uiState.session ?: return
     var showFinishConfirmation by rememberSaveable { mutableStateOf(false) }
@@ -78,7 +78,39 @@ fun ActiveRunScreen(
                     }
                     Text(stringResource(R.string.run_guardians_connected, session.guardianIds.size))
                     Text(stringResource(R.string.run_gps_mock))
-                    Text(stringResource(R.string.run_sensors_mock))
+                    Text(
+                        stringResource(
+                            if (uiState.sensorStatus.monitoring) {
+                                R.string.run_sensors_active
+                            } else {
+                                R.string.run_sensors_unavailable
+                            }
+                        )
+                    )
+                    Text(
+                        stringResource(
+                            R.string.run_accelerometer_status,
+                            stringResource(
+                                if (uiState.sensorStatus.accelerometerAvailable) {
+                                    R.string.sensor_available
+                                } else {
+                                    R.string.sensor_unavailable
+                                }
+                            )
+                        )
+                    )
+                    Text(
+                        stringResource(
+                            R.string.run_gyroscope_status,
+                            stringResource(
+                                if (uiState.sensorStatus.gyroscopeAvailable) {
+                                    R.string.sensor_available
+                                } else {
+                                    R.string.sensor_unavailable
+                                }
+                            )
+                        )
+                    )
                 }
             }
             Text(
