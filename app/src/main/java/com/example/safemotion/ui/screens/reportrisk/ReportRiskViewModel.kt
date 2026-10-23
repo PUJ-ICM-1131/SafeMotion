@@ -3,13 +3,16 @@ package com.example.safemotion.ui.screens.reportrisk
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.safemotion.data.model.MapPoint
 import com.example.safemotion.data.model.RiskCategory
 import com.example.safemotion.data.repository.EvidencePhotoStorage
+import com.example.safemotion.data.repository.LocationRepository
 import com.example.safemotion.data.repository.MockRiskRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class ReportRiskViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(ReportRiskUiState())
@@ -26,8 +29,37 @@ class ReportRiskViewModel : ViewModel() {
         _uiState.update { it.copy(description = description) }
     }
 
-    fun useCurrentLocation() {
-        _uiState.update { it.copy(location = MockRiskRepository.CURRENT_LOCATION) }
+    // Se llama cuando el usuario ya dio el permiso de ubicación.
+    fun useCurrentLocation(repository: LocationRepository) {
+        if (_uiState.value.isLocating) return
+        _uiState.update { it.copy(isLocating = true, locationUnavailable = false) }
+        viewModelScope.launch {
+            val point = repository.currentLocation()
+            if (point == null) {
+                _uiState.update { it.copy(isLocating = false, locationUnavailable = true) }
+            } else {
+                setLocation(point, repository.addressFor(point))
+            }
+        }
+    }
+
+    // Guarda las coordenadas; si el Geocoder no encontró dirección, se muestran las coordenadas.
+    fun setLocation(point: MapPoint, address: String?) {
+        val label = address ?: String.format(Locale.US, "%.5f, %.5f", point.latitude, point.longitude)
+        _uiState.update {
+            it.copy(
+                location = label,
+                latitude = point.latitude,
+                longitude = point.longitude,
+                isLocating = false,
+                locationUnavailable = false
+            )
+        }
+    }
+
+    // Se llama si el usuario negó el permiso de ubicación.
+    fun onLocationDenied() {
+        _uiState.update { it.copy(isLocating = false, locationUnavailable = true) }
     }
 
     // Crea el archivo interno donde la cámara guardará la foto y devuelve su Uri segura.
@@ -83,6 +115,8 @@ class ReportRiskViewModel : ViewModel() {
             category = category,
             description = state.description.trim(),
             place = state.location,
+            latitude = state.latitude ?: MockRiskRepository.DEFAULT_LATITUDE,
+            longitude = state.longitude ?: MockRiskRepository.DEFAULT_LONGITUDE,
             photoPath = state.photoPath
         )
         _uiState.update { it.copy(sent = true) }

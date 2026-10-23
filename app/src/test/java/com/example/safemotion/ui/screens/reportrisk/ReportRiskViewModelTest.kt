@@ -1,5 +1,6 @@
 package com.example.safemotion.ui.screens.reportrisk
 
+import com.example.safemotion.data.model.MapPoint
 import com.example.safemotion.data.model.RiskCategory
 import com.example.safemotion.data.repository.MockRiskRepository
 import org.junit.Assert.assertEquals
@@ -11,7 +12,7 @@ class ReportRiskViewModelTest {
     private fun ReportRiskViewModel.fillTextFields() {
         selectCategory(RiskCategory.INSECURITY)
         changeDescription("Dos motos rondando el sendero sobre las 5:30 a. m.")
-        useCurrentLocation()
+        setLocation(MapPoint(4.6370, -74.0820), "Calle 45 # 7-20, Bogotá")
     }
 
     @Test
@@ -42,6 +43,18 @@ class ReportRiskViewModelTest {
         val reported = MockRiskRepository.zones.value.last()
         assertEquals(RiskCategory.INSECURITY, reported.category)
         assertEquals("/fake/evidencia.jpg", reported.evidences.first().photoPath)
+        assertEquals("Calle 45 # 7-20, Bogotá", reported.place)
+        assertEquals(4.6370, reported.latitude, 0.0)
+        assertEquals(-74.0820, reported.longitude, 0.0)
+    }
+
+    @Test
+    fun locationWithoutAddressShowsTheCoordinates() {
+        val viewModel = ReportRiskViewModel()
+        viewModel.setLocation(MapPoint(4.6370, -74.0820), null)
+
+        assertEquals("4.63700, -74.08200", viewModel.uiState.value.location)
+        assertFalse(viewModel.uiState.value.locationUnavailable)
     }
 
     @Test

@@ -1,7 +1,6 @@
 package com.example.safemotion.ui.screens.reportrisk
 
 import android.Manifest
-import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -56,24 +55,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import com.example.safemotion.R
 import com.example.safemotion.data.model.RiskCategory
 import com.example.safemotion.ui.components.EvidencePhoto
 import com.example.safemotion.ui.components.icon
 import com.example.safemotion.ui.components.labelRes
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val LocationPermissions = listOf(
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.ACCESS_COARSE_LOCATION
+)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ReportRiskScreen(
     uiState: ReportRiskUiState,
     onCategorySelected: (RiskCategory) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onUseCurrentLocation: () -> Unit,
+    onLocationDenied: () -> Unit,
     onPrepareCameraPhoto: () -> Uri,
     onCameraResult: (Boolean) -> Unit,
     onCameraDenied: () -> Unit,
@@ -88,18 +95,20 @@ fun ReportRiskScreen(
     val scope = rememberCoroutineScope()
     val sentMessage = stringResource(R.string.report_sent)
     val viewLabel = stringResource(R.string.report_view)
-    val context = LocalContext.current
 
     // Cámara: la app de cámara del sistema escribe la foto en la Uri que le damos.
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success -> onCameraResult(success) }
 
-    // Permiso de cámara en tiempo de ejecución.
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
+    // Permiso de cámara en tiempo de ejecución con Accompanist.
+    val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA) { granted ->
         if (granted) cameraLauncher.launch(onPrepareCameraPhoto()) else onCameraDenied()
+    }
+
+    // Permiso de ubicación: basta con la precisa o la aproximada.
+    val locationPermissions = rememberMultiplePermissionsState(LocationPermissions) { results ->
+        if (results.values.any { it }) onUseCurrentLocation() else onLocationDenied()
     }
 
     // Galería: selector de fotos del sistema, no necesita permiso.
@@ -108,14 +117,17 @@ fun ReportRiskScreen(
     ) { uri -> uri?.let(onGalleryPhotoPicked) }
 
     val takePhoto = {
-        val granted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
-        if (granted) {
+        if (cameraPermission.status.isGranted) {
             cameraLauncher.launch(onPrepareCameraPhoto())
         } else {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            cameraPermission.launchPermissionRequest()
+        }
+    }
+    val requestLocation = {
+        if (locationPermissions.permissions.any { it.status.isGranted }) {
+            onUseCurrentLocation()
+        } else {
+            locationPermissions.launchMultiplePermissionRequest()
         }
     }
     val pickFromGallery = {
@@ -213,7 +225,9 @@ fun ReportRiskScreen(
             )
             LocationSection(
                 location = uiState.location,
-                onUseCurrentLocation = onUseCurrentLocation
+                isLocating = uiState.isLocating,
+                locationUnavailable = uiState.locationUnavailable,
+                onUseCurrentLocation = requestLocation
             )
             PhotoSection(
                 uiState = uiState,
@@ -271,6 +285,8 @@ private fun CategorySection(
 @Composable
 private fun LocationSection(
     location: String,
+    isLocating: Boolean,
+    locationUnavailable: Boolean,
     onUseCurrentLocation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -285,16 +301,28 @@ private fun LocationSection(
         if (location.isEmpty()) {
             OutlinedButton(
                 onClick = onUseCurrentLocation,
+                enabled = !isLocating,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Default.MyLocation,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+                if (isLocating) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
                 Text(
                     text = stringResource(R.string.report_use_current_location),
                     modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+            if (locationUnavailable) {
+                Text(
+                    text = stringResource(R.string.map_location_unavailable),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
                 )
             }
         } else {
