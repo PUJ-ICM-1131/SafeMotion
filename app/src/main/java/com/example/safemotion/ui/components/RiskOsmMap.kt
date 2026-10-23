@@ -19,7 +19,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.safemotion.R
 import com.example.safemotion.data.model.MapPoint
 import com.example.safemotion.data.model.RiskZone
-import com.example.safemotion.ui.theme.Indigo
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.util.MapTileIndex
@@ -141,8 +140,9 @@ fun RiskOsmMap(
             userLocation?.let { location ->
                 val me = Marker(map).apply {
                     position = GeoPoint(location.latitude, location.longitude)
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = pinIcon(map.context, Indigo)
+                    // El punto se centra sobre la coordenada (los pines se apoyan en su punta).
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                    icon = ContextCompat.getDrawable(map.context, R.drawable.ic_my_location_dot)
                     title = myLocationLabel
                 }
                 map.overlays.add(me)
