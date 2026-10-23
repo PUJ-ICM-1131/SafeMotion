@@ -1,10 +1,6 @@
 package com.example.safemotion.ui.screens.riskmap
 
 import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,11 +38,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import com.example.safemotion.R
 import com.example.safemotion.data.model.RiskCategory
 import com.example.safemotion.data.model.RiskEvidence
@@ -56,12 +50,16 @@ import com.example.safemotion.ui.components.RiskCategoryBadge
 import com.example.safemotion.ui.components.RiskOsmMap
 import com.example.safemotion.ui.components.labelRes
 import com.example.safemotion.ui.components.EvidencePhoto
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
-private val LocationPermissions = arrayOf(
+private val LocationPermissions = listOf(
     Manifest.permission.ACCESS_FINE_LOCATION,
     Manifest.permission.ACCESS_COARSE_LOCATION
 )
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun RiskMapScreen(
     uiState: RiskMapUiState,
@@ -73,18 +71,15 @@ fun RiskMapScreen(
     onLocationDenied: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
-        // Basta con que el usuario dé la ubicación precisa o la aproximada.
+    // Permiso de ubicación con Accompanist: basta con la precisa o la aproximada.
+    val locationPermissions = rememberMultiplePermissionsState(LocationPermissions) { results ->
         if (results.values.any { it }) onLocationPermissionGranted() else onLocationDenied()
     }
     val requestLocation = {
-        if (hasLocationPermission(context)) {
+        if (locationPermissions.permissions.any { it.status.isGranted }) {
             onLocationPermissionGranted()
         } else {
-            permissionLauncher.launch(LocationPermissions)
+            locationPermissions.launchMultiplePermissionRequest()
         }
     }
 
@@ -145,11 +140,6 @@ fun RiskMapScreen(
         }
     }
 }
-
-private fun hasLocationPermission(context: Context): Boolean =
-    LocationPermissions.any {
-        ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-    }
 
 @Composable
 private fun MapSearchBar(
