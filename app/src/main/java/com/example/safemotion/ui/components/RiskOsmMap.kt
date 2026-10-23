@@ -68,7 +68,8 @@ fun RiskOsmMap(
     onZoneClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     userLocation: MapPoint? = null,
-    initialCenter: MapPoint = BogotaCenter
+    initialCenter: MapPoint = BogotaCenter,
+    recenterKey: Int = 0
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -112,8 +113,8 @@ fun RiskOsmMap(
         }
     }
 
-    // Cuando llega la ubicación del usuario, el mapa se centra en ella.
-    LaunchedEffect(userLocation) {
+    // Cuando llega la ubicación del usuario (o se vuelve a pedir), el mapa se centra en ella.
+    LaunchedEffect(userLocation, recenterKey) {
         userLocation?.let { mapView.controller.animateTo(GeoPoint(it.latitude, it.longitude)) }
     }
 

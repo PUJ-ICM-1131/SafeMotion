@@ -64,7 +64,8 @@ class RiskMapViewModel : ViewModel() {
                 it.copy(
                     userLocation = location,
                     isLocating = false,
-                    locationUnavailable = location == null
+                    locationUnavailable = location == null,
+                    locationUpdates = if (location != null) it.locationUpdates + 1 else it.locationUpdates
                 )
             }
         }

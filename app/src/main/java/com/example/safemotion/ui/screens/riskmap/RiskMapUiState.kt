@@ -9,7 +9,9 @@ data class RiskMapUiState(
     val selectedZoneId: String? = null,
     val userLocation: MapPoint? = null,
     val isLocating: Boolean = false,
-    val locationUnavailable: Boolean = false
+    val locationUnavailable: Boolean = false,
+    // Sube cada vez que llega una ubicación, para recentrar el mapa aunque no haya cambiado.
+    val locationUpdates: Int = 0
 ) {
     val selectedZone: RiskZone?
         get() = zones.firstOrNull { it.id == selectedZoneId }

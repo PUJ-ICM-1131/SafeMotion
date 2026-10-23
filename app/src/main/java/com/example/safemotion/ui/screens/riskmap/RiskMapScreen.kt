@@ -107,7 +107,8 @@ fun RiskMapScreen(
                     selectedZoneId = uiState.selectedZoneId,
                     onZoneClick = onZoneSelected,
                     modifier = Modifier.fillMaxSize(),
-                    userLocation = uiState.userLocation
+                    userLocation = uiState.userLocation,
+                    recenterKey = uiState.locationUpdates
                 )
                 Column(
                     modifier = Modifier.align(Alignment.TopCenter).padding(16.dp),
