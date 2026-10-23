@@ -136,13 +136,15 @@ object MockRiskRepository {
     }
 
     private fun currentReporter(): String {
-        val parts = FirebaseAuthRepository.currentUser?.name.orEmpty()
+        val user = FirebaseAuthRepository.currentUser
+        val parts = user?.name.orEmpty()
             .split(" ")
             .filter { it.isNotBlank() }
         return when {
             parts.size >= 2 -> "${parts.first()} ${parts.last().first()}."
             parts.size == 1 -> parts.first()
-            else -> "Mariana R."
+            // Cuentas sin nombre guardado: se usa la parte del correo antes de la @.
+            else -> user?.email.orEmpty().substringBefore("@")
         }
     }
 }

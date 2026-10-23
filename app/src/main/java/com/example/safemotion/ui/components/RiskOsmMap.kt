@@ -19,7 +19,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.safemotion.R
 import com.example.safemotion.data.model.MapPoint
 import com.example.safemotion.data.model.RiskZone
-import com.example.safemotion.ui.theme.Indigo
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.util.MapTileIndex
@@ -69,7 +68,8 @@ fun RiskOsmMap(
     onZoneClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     userLocation: MapPoint? = null,
-    initialCenter: MapPoint = BogotaCenter
+    initialCenter: MapPoint = BogotaCenter,
+    recenterKey: Int = 0
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -113,8 +113,8 @@ fun RiskOsmMap(
         }
     }
 
-    // Cuando llega la ubicación del usuario, el mapa se centra en ella.
-    LaunchedEffect(userLocation) {
+    // Cuando llega la ubicación del usuario (o se vuelve a pedir), el mapa se centra en ella.
+    LaunchedEffect(userLocation, recenterKey) {
         userLocation?.let { mapView.controller.animateTo(GeoPoint(it.latitude, it.longitude)) }
     }
 
@@ -141,8 +141,9 @@ fun RiskOsmMap(
             userLocation?.let { location ->
                 val me = Marker(map).apply {
                     position = GeoPoint(location.latitude, location.longitude)
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = pinIcon(map.context, Indigo)
+                    // El punto se centra sobre la coordenada (los pines se apoyan en su punta).
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                    icon = ContextCompat.getDrawable(map.context, R.drawable.ic_my_location_dot)
                     title = myLocationLabel
                 }
                 map.overlays.add(me)
