@@ -126,6 +126,8 @@
     </plurals>
     <string name="risk_no_confirmations">Aún nadie lo ha confirmado</string>
     <string name="map_my_location">Tu ubicación</string>
+    <string name="map_locate_me">Centrar en mi ubicación</string>
+    <string name="map_location_unavailable">No pudimos obtener tu ubicación. Revisa el permiso y que el GPS esté encendido.</string>
 
     <!-- Reporte de riesgos (HU-10) -->
     <string name="report_risk_title">Reportar riesgo</string>

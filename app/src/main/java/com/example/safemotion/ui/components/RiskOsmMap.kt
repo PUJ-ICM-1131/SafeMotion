@@ -6,10 +6,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -18,13 +20,42 @@ import com.example.safemotion.data.model.MapPoint
 import com.example.safemotion.data.model.RiskZone
 import com.example.safemotion.ui.theme.Indigo
 import org.osmdroid.config.Configuration
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
+import org.osmdroid.util.MapTileIndex
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.Marker
 
 private val BogotaCenter = MapPoint(latitude = 4.6765, longitude = -74.0600)
+
+// OpenStreetMap exige que cada app se identifique con un nombre propio y descriptivo.
+private const val OsmUserAgent = "SafeMotion/0.2 (app academica Android, Pontificia Universidad Javeriana)"
+
+
+// API key gratuita de MapTiler.
+private const val MapTilerKey = "9iRoHwbvd5ReyrwkqfoT"
+
+// Cuadros del mapa de MapTiler (estilo Streets), con datos de OpenStreetMap.
+private object MapTilerStreets : OnlineTileSourceBase(
+    "MapTilerStreets",
+    0,
+    19,
+    256,
+    ".png",
+    arrayOf("https://api.maptiler.com/maps/streets-v2/256/"),
+    "© MapTiler © OpenStreetMap contributors"
+) {
+    // MapTiler necesita la key al final de la URL: .../zoom/x/y.png?key=...
+    override fun getTileURLString(pMapTileIndex: Long): String =
+        baseUrl +
+                MapTileIndex.getZoom(pMapTileIndex) + "/" +
+                MapTileIndex.getX(pMapTileIndex) + "/" +
+                MapTileIndex.getY(pMapTileIndex) +
+                imageFilenameEnding() +
+                "?key=" + MapTilerKey
+}
 
 /**
  * Mapa real de OpenStreetMap (osmdroid) con un marcador por zona de riesgo
@@ -47,11 +78,10 @@ fun RiskOsmMap(
     val mapView = remember {
         Configuration.getInstance().apply {
             load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
-            // OpenStreetMap exige identificar la app que descarga los cuadros del mapa.
-            userAgentValue = context.packageName
+            userAgentValue = OsmUserAgent
         }
         MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
+            setTileSource(MapTilerStreets)
             setMultiTouchControls(true)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             controller.setZoom(13.0)
@@ -92,11 +122,13 @@ fun RiskOsmMap(
         modifier = modifier,
         update = { map ->
             map.overlays.clear()
+            // Créditos obligatorios de OpenStreetMap en la esquina del mapa.
+            map.overlays.add(CopyrightOverlay(map.context))
             zones.forEach { zone ->
                 val marker = Marker(map).apply {
                     position = GeoPoint(zone.latitude, zone.longitude)
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = icon?.mutate()?.also { it.setTint(zone.category.markerColor().toArgb()) }
+                    icon = pinIcon(map.context, zone.category.markerColor())
                     alpha = if (selectedZoneId == null || zone.id == selectedZoneId) 1f else 0.5f
                     setOnMarkerClickListener { _, _ ->
                         onZoneClick(zone.id)
@@ -109,7 +141,7 @@ fun RiskOsmMap(
                 val me = Marker(map).apply {
                     position = GeoPoint(location.latitude, location.longitude)
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = icon?.mutate()?.also { it.setTint(Indigo.toArgb()) }
+                    icon = pinIcon(map.context, Indigo)
                     title = myLocationLabel
                 }
                 map.overlays.add(me)
@@ -118,3 +150,9 @@ fun RiskOsmMap(
         }
     )
 }
+
+// Copia el pin y lo pinta del color indicado.
+private fun pinIcon(context: Context, color: Color) =
+    ContextCompat.getDrawable(context, R.drawable.ic_map_pin)
+        ?.mutate()
+        ?.apply { setTint(color.toArgb()) }
