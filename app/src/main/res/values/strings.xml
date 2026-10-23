@@ -40,8 +40,9 @@
     <string name="activity_cycling">Ciclismo</string>
     <string name="select_guardians">Selecciona tus guardianes</string>
     <string name="guardian_required">Selecciona al menos un guardián para iniciar.</string>
-    <string name="run_mock_notice">El recorrido, el GPS y los sensores se simulan en esta entrega.</string>
+    <string name="run_mock_notice">El recorrido activo y los sensores siguen simulados; la planeación de ruta usa GPS real.</string>
     <string name="start_run">Iniciar recorrido</string>
+    <string name="plan_route">Planear ruta</string>
     <string name="active_run_title">Recorrido activo</string>
     <string name="run_time">Tiempo: %1$02d:%2$02d</string>
     <string name="run_distance">Distancia: %1$.2f km</string>
@@ -220,4 +221,27 @@
     <string name="home_risk_map">Mapa de riesgos</string>
     <string name="home_report_risk">Reportar un riesgo</string>
     <string name="home_history">Ver historial</string>
+
+    <!-- Planeación de rutas con OpenStreetMap + OSRM -->
+    <string name="route_planner_title">Planear ruta</string>
+    <string name="route_planner_instruction">Tu ubicación es el punto de inicio. Toca el mapa para elegir el destino y calcula la ruta.</string>
+    <string name="route_profile_foot">Corriendo</string>
+    <string name="route_profile_bike">En bicicleta</string>
+    <string name="route_origin">Mi ubicación</string>
+    <string name="route_destination">Destino</string>
+    <string name="route_origin_value">Inicio: %1$.5f, %2$.5f</string>
+    <string name="route_destination_value">Destino: %1$.5f, %2$.5f</string>
+    <string name="route_waiting_for_location">Obteniendo tu ubicación…</string>
+    <string name="route_tap_destination">Toca el mapa para seleccionar el destino.</string>
+    <string name="route_summary">%1$.2f km · %2$d min aprox.</string>
+    <string name="route_powered_by_osm_osrm">Mapa: OpenStreetMap · Ruta: OSRM</string>
+    <string name="route_update_location">Actualizar ubicación</string>
+    <string name="route_calculate">Calcular ruta</string>
+    <string name="route_error_permission">Se necesita permiso de ubicación para usar tu posición como inicio.</string>
+    <string name="route_error_location">No fue posible obtener tu ubicación. Activa el GPS e inténtalo de nuevo.</string>
+    <string name="route_error_origin">Primero obtén tu ubicación actual.</string>
+    <string name="route_error_destination">Selecciona un destino tocando el mapa.</string>
+    <string name="route_error_network">No fue posible consultar OSRM. Revisa tu conexión e inténtalo nuevamente.</string>
+    <string name="route_error_no_route">OSRM no encontró una ruta entre estos dos puntos.</string>
+    <string name="route_error_invalid_response">La respuesta de rutas no contiene un trazado válido.</string>
 </resources>
