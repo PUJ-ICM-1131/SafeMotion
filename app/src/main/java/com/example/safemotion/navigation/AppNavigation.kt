@@ -20,6 +20,7 @@ import com.example.safemotion.data.repository.FirebaseAuthRepository
 import com.example.safemotion.data.repository.MockGuardianTrackingRepository
 import com.example.safemotion.data.repository.MockRunRepository
 import com.example.safemotion.data.repository.LocationRepository
+import com.example.safemotion.data.repository.EvidencePhotoStorage
 import com.example.safemotion.ui.components.MainDestination
 import com.example.safemotion.ui.components.MainNavigationBar
 import com.example.safemotion.ui.screens.auth.AuthScreen
@@ -50,6 +51,7 @@ import com.example.safemotion.ui.screens.riskmap.RiskMapViewModel
 fun AppNavigation(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val locationRepository = remember { LocationRepository(context.applicationContext) }
+    val evidencePhotoStorage = remember { EvidencePhotoStorage(context.applicationContext) }
     val authViewModel: AuthViewModel = viewModel()
     val startRoute = remember { if (authViewModel.restoreSession()) HomeRoute else AuthRoute }
     val backStack = rememberNavBackStack(startRoute)
@@ -263,12 +265,15 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         onCategorySelected = reportRiskViewModel::selectCategory,
                         onDescriptionChange = reportRiskViewModel::changeDescription,
                         onUseCurrentLocation = reportRiskViewModel::useCurrentLocation,
-                        onAttachPhoto = reportRiskViewModel::attachPhoto,
-                        onRemovePhoto = reportRiskViewModel::removePhoto,
+                        onPrepareCameraPhoto = { reportRiskViewModel.prepareCameraPhoto(evidencePhotoStorage) },
+                        onCameraResult = { success -> reportRiskViewModel.onCameraResult(success, evidencePhotoStorage) },
+                        onCameraDenied = reportRiskViewModel::onCameraDenied,
+                        onGalleryPhotoPicked = { uri -> reportRiskViewModel.importFromGallery(uri, evidencePhotoStorage) },
+                        onRemovePhoto = { reportRiskViewModel.removePhoto(evidencePhotoStorage) },
                         onSubmit = reportRiskViewModel::submit,
                         onReportSent = { backStack.removeLastOrNull() },
                         onClose = {
-                            reportRiskViewModel.reset()
+                            reportRiskViewModel.reset(evidencePhotoStorage)
                             backStack.removeLastOrNull()
                         }
                     )

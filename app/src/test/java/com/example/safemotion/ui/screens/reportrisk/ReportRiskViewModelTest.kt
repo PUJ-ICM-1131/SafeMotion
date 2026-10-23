@@ -30,7 +30,7 @@ class ReportRiskViewModelTest {
     fun reportWithPhotoIsSentOnlyOnce() {
         val viewModel = ReportRiskViewModel()
         viewModel.fillTextFields()
-        viewModel.attachPhoto(MockPhotoSource.CAMERA)
+        viewModel.attachPhoto("/fake/evidencia.jpg", PhotoSource.CAMERA)
         val zonesBefore = MockRiskRepository.zones.value.size
 
         assertFalse(viewModel.uiState.value.photoMissing)
@@ -39,14 +39,16 @@ class ReportRiskViewModelTest {
         assertTrue(viewModel.uiState.value.sent)
         assertFalse(viewModel.submit())
         assertEquals(zonesBefore + 1, MockRiskRepository.zones.value.size)
-        assertEquals(RiskCategory.INSECURITY, MockRiskRepository.zones.value.last().category)
+        val reported = MockRiskRepository.zones.value.last()
+        assertEquals(RiskCategory.INSECURITY, reported.category)
+        assertEquals("/fake/evidencia.jpg", reported.evidences.first().photoPath)
     }
 
     @Test
     fun removingThePhotoMakesTheReportIncompleteAgain() {
         val viewModel = ReportRiskViewModel()
         viewModel.fillTextFields()
-        viewModel.attachPhoto(MockPhotoSource.GALLERY)
+        viewModel.attachPhoto("/fake/evidencia.jpg", PhotoSource.GALLERY)
         assertTrue(viewModel.uiState.value.isComplete)
 
         viewModel.removePhoto()
@@ -58,7 +60,7 @@ class ReportRiskViewModelTest {
     fun blankDescriptionKeepsTheReportIncomplete() {
         val viewModel = ReportRiskViewModel()
         viewModel.fillTextFields()
-        viewModel.attachPhoto(MockPhotoSource.CAMERA)
+        viewModel.attachPhoto("/fake/evidencia.jpg", PhotoSource.CAMERA)
         viewModel.changeDescription("   ")
 
         assertFalse(viewModel.uiState.value.isComplete)
@@ -72,7 +74,7 @@ class ReportRiskViewModelTest {
         viewModel.prepareNewReport()
         assertEquals(RiskCategory.INSECURITY, viewModel.uiState.value.category)
 
-        viewModel.attachPhoto(MockPhotoSource.CAMERA)
+        viewModel.attachPhoto("/fake/evidencia.jpg", PhotoSource.CAMERA)
         assertTrue(viewModel.submit())
         viewModel.prepareNewReport()
         assertEquals(ReportRiskUiState(), viewModel.uiState.value)

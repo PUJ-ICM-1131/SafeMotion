@@ -141,8 +141,11 @@
     <string name="report_photo_error">Necesitamos una foto para publicar el reporte</string>
     <string name="report_take_photo">Tomar foto</string>
     <string name="report_gallery">Galería</string>
-    <string name="report_photo_camera_mock">Foto tomada · simulada</string>
-    <string name="report_photo_gallery_mock">Foto de la galería · simulada</string>
+    <string name="report_photo_from_camera">Tomada con la cámara · guardada en el teléfono</string>
+    <string name="report_photo_from_gallery">Elegida de la galería · guardada en el teléfono</string>
+    <string name="report_photo_description">Foto de evidencia del riesgo</string>
+    <string name="report_photo_save_failed">No pudimos guardar la foto. Intenta de nuevo.</string>
+    <string name="report_camera_denied">Sin permiso de cámara no podemos tomar la foto. Puedes elegir una de la galería.</string>
     <string name="report_remove_photo">Quitar foto</string>
     <string name="report_incomplete_hint">Completa categoría, descripción, ubicación y foto</string>
     <string name="report_send">Enviar reporte</string>
