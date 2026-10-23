@@ -9,6 +9,11 @@ data class ReportRiskUiState(
     val category: RiskCategory? = null,
     val description: String = "",
     val location: String = "",
+    // Coordenadas del GPS; se llenan junto con la dirección al usar la ubicación actual.
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val isLocating: Boolean = false,
+    val locationUnavailable: Boolean = false,
     // Ruta de la foto en el almacenamiento interno de la app.
     val photoPath: String? = null,
     val photoSource: PhotoSource? = null,

@@ -8,9 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 object MockRiskRepository {
-    const val CURRENT_LOCATION = "Parque Simón Bolívar, entrada Carrera 60"
-
-    // Coordenadas por defecto (Parque Simón Bolívar) mientras no haya GPS.
+    // Coordenadas por defecto (Parque Simón Bolívar) si el reporte no trae ubicación.
     const val DEFAULT_LATITUDE = 4.6580
     const val DEFAULT_LONGITUDE = -74.0930
 
@@ -113,7 +111,8 @@ object MockRiskRepository {
             reportedAt = "Hoy",
             reporter = currentReporter(),
             confirmations = 0,
-            evidences = listOf(RiskEvidence("e${_zones.value.size + 10}", "Ahora", photoPath)),            latitude = latitude,
+            evidences = listOf(RiskEvidence("e${_zones.value.size + 10}", "Ahora", photoPath)),
+            latitude = latitude,
             longitude = longitude
         )
         _zones.value = _zones.value + zone
