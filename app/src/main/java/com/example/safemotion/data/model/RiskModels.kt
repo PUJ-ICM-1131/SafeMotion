@@ -17,5 +17,7 @@ data class RiskZone(
     val confirmations: Int,
     val evidences: List<RiskEvidence>,
     val mapX: Float,
-    val mapY: Float
+    val mapY: Float,
+    val latitude: Double,
+    val longitude: Double
 )

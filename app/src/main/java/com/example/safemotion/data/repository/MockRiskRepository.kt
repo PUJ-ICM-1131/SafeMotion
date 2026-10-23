@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.update
 object MockRiskRepository {
     const val CURRENT_LOCATION = "Parque Simón Bolívar, entrada Carrera 60"
 
+    // Coordenadas por defecto (Parque Simón Bolívar) mientras no haya GPS.
+    const val DEFAULT_LATITUDE = 4.6580
+    const val DEFAULT_LONGITUDE = -74.0930
+
     private val initialZones = listOf(
         RiskZone(
             id = "z1",
@@ -21,7 +25,9 @@ object MockRiskRepository {
             confirmations = 12,
             evidences = listOf(RiskEvidence("e1", "5:41 a. m."), RiskEvidence("e2", "5:43 a. m.")),
             mapX = -0.61f,
-            mapY = -0.31f
+            mapY = -0.31f,
+            latitude = 4.6990,
+            longitude = -74.0450
         ),
         RiskZone(
             id = "z2",
@@ -33,7 +39,9 @@ object MockRiskRepository {
             confirmations = 8,
             evidences = listOf(RiskEvidence("e3", "5:52 a. m."), RiskEvidence("e4", "5:55 a. m.")),
             mapX = 0.23f,
-            mapY = -0.41f
+            mapY = -0.41f,
+            latitude = 4.6835,
+            longitude = -74.0836
         ),
         RiskZone(
             id = "z3",
@@ -45,7 +53,9 @@ object MockRiskRepository {
             confirmations = 5,
             evidences = listOf(RiskEvidence("e5", "8:14 p. m.")),
             mapX = 0.72f,
-            mapY = -0.13f
+            mapY = -0.13f,
+            latitude = 4.6735,
+            longitude = -74.0540
         ),
         RiskZone(
             id = "z4",
@@ -57,7 +67,9 @@ object MockRiskRepository {
             confirmations = 15,
             evidences = listOf(RiskEvidence("e6", "6:02 a. m."), RiskEvidence("e7", "6:03 a. m.")),
             mapX = -0.28f,
-            mapY = 0.12f
+            mapY = 0.12f,
+            latitude = 4.6866,
+            longitude = -74.0488
         ),
         RiskZone(
             id = "z5",
@@ -69,7 +81,9 @@ object MockRiskRepository {
             confirmations = 9,
             evidences = listOf(RiskEvidence("e8", "6:30 a. m.")),
             mapX = 0.54f,
-            mapY = 0.37f
+            mapY = 0.37f,
+            latitude = 4.7083,
+            longitude = -74.0557
         ),
         RiskZone(
             id = "z6",
@@ -81,10 +95,13 @@ object MockRiskRepository {
             confirmations = 7,
             evidences = listOf(RiskEvidence("e9", "5:20 a. m.")),
             mapX = 0.03f,
-            mapY = 0.51f
+            mapY = 0.51f,
+            latitude = 4.6560,
+            longitude = -74.0566
         )
     )
 
+    // Posiciones libres del mapa simulado para los reportes nuevos.
     private val freeSpots = listOf(
         -0.35f to -0.55f,
         0.45f to 0.05f,
@@ -101,7 +118,13 @@ object MockRiskRepository {
 
     private var lastReportedZoneId: String? = null
 
-    fun addReport(category: RiskCategory, description: String, place: String): RiskZone {
+    fun addReport(
+        category: RiskCategory,
+        description: String,
+        place: String,
+        latitude: Double = DEFAULT_LATITUDE,
+        longitude: Double = DEFAULT_LONGITUDE
+    ): RiskZone {
         val newReports = _zones.value.size - initialZones.size
         val spot = freeSpots[newReports % freeSpots.size]
         val zone = RiskZone(
@@ -114,7 +137,9 @@ object MockRiskRepository {
             confirmations = 0,
             evidences = listOf(RiskEvidence("e${_zones.value.size + 10}", "Ahora")),
             mapX = spot.first,
-            mapY = spot.second
+            mapY = spot.second,
+            latitude = latitude,
+            longitude = longitude
         )
         _zones.value = _zones.value + zone
         lastReportedZoneId = zone.id
