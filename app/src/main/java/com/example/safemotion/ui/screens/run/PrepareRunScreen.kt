@@ -13,6 +13,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,6 +31,7 @@ fun PrepareRunScreen(
     uiState: RunUiState,
     onActivitySelected: (RunActivityType) -> Unit,
     onGuardianSelected: (Int) -> Unit,
+    onPlanRoute: () -> Unit,
     onStartRun: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -96,6 +98,9 @@ fun PrepareRunScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            OutlinedButton(onClick = onPlanRoute, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.plan_route))
+            }
             Button(onClick = onStartRun, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.start_run))
             }

@@ -18,11 +18,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.example.safemotion.data.model.RouteProfile
+import com.example.safemotion.data.remote.osrm.KtorOsrmRouteService
+import com.example.safemotion.data.repository.EvidencePhotoStorage
 import com.example.safemotion.data.repository.FirebaseAuthRepository
+import com.example.safemotion.data.repository.LocationRepository
 import com.example.safemotion.data.repository.MockGuardianTrackingRepository
 import com.example.safemotion.data.repository.MockRunRepository
-import com.example.safemotion.data.repository.LocationRepository
-import com.example.safemotion.data.repository.EvidencePhotoStorage
+import com.example.safemotion.data.repository.OsrmRouteRepository
 import com.example.safemotion.data.sensor.AndroidRunSensorMonitor
 import com.example.safemotion.ui.components.MainDestination
 import com.example.safemotion.ui.components.MainNavigationBar
@@ -50,6 +53,8 @@ import com.example.safemotion.ui.screens.reportrisk.ReportRiskScreen
 import com.example.safemotion.ui.screens.reportrisk.ReportRiskViewModel
 import com.example.safemotion.ui.screens.riskmap.RiskMapScreen
 import com.example.safemotion.ui.screens.riskmap.RiskMapViewModel
+import com.example.safemotion.ui.screens.routeplanner.RoutePlannerScreen
+import com.example.safemotion.ui.screens.routeplanner.RoutePlannerViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
@@ -74,6 +79,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val monitoringViewModel: MonitoringViewModel = viewModel()
     val receivedAlertViewModel: ReceivedAlertViewModel = viewModel()
     val historyViewModel: HistoryViewModel = viewModel()
+    val routePlannerViewModel: RoutePlannerViewModel = viewModel {
+        RoutePlannerViewModel(
+            routeRepository = OsrmRouteRepository(KtorOsrmRouteService()),
+            currentLocation = locationRepository::currentLocation
+        )
+    }
     LaunchedEffect(Unit) {
         if (FirebaseAuthRepository.currentUser == null && backStack.lastOrNull() != AuthRoute) {
             backStack.clear()
@@ -183,9 +194,35 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         uiState = uiState,
                         onActivitySelected = runViewModel::selectActivity,
                         onGuardianSelected = runViewModel::toggleGuardian,
+                        onPlanRoute = {
+                            val profile = when (uiState.activity) {
+                                com.example.safemotion.data.model.RunActivityType.RUNNING -> {
+                                    RouteProfile.FOOT
+                                }
+                                com.example.safemotion.data.model.RunActivityType.CYCLING -> {
+                                    RouteProfile.BIKE
+                                }
+                            }
+                            backStack.add(RoutePlannerRoute(profile))
+                        },
                         onStartRun = {
                             if (runViewModel.startRun()) backStack.add(ActiveRunRoute)
                         },
+                        onBack = { backStack.removeLastOrNull() }
+                    )
+                }
+                is RoutePlannerRoute -> NavEntry(key) {
+                    LaunchedEffect(key.profile) {
+                        routePlannerViewModel.selectProfile(key.profile)
+                    }
+                    val uiState by routePlannerViewModel.uiState.collectAsStateWithLifecycle()
+                    RoutePlannerScreen(
+                        uiState = uiState,
+                        onProfileSelected = routePlannerViewModel::selectProfile,
+                        onDestinationSelected = routePlannerViewModel::selectDestination,
+                        onLoadCurrentLocation = routePlannerViewModel::loadCurrentLocation,
+                        onPermissionDenied = routePlannerViewModel::onLocationPermissionDenied,
+                        onCalculateRoute = routePlannerViewModel::calculateRoute,
                         onBack = { backStack.removeLastOrNull() }
                     )
                 }
