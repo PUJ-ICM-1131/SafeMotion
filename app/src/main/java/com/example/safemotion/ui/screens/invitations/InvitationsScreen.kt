@@ -38,7 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,7 +60,7 @@ fun InvitationsScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val resources = LocalResources.current
     val undoLabel = stringResource(R.string.undo)
 
     Scaffold(
@@ -102,9 +102,9 @@ fun InvitationsScreen(
                         onRespond(invitation.id)
                         val nombre = firstNameOf(invitation.runnerName)
                         val mensaje = if (aceptada) {
-                            context.getString(R.string.invitation_accepted, nombre)
+                            resources.getString(R.string.invitation_accepted, nombre)
                         } else {
-                            context.getString(R.string.invitation_rejected, nombre)
+                            resources.getString(R.string.invitation_rejected, nombre)
                         }
                         scope.launch {
                             val resultado = snackbarHostState.showSnackbar(

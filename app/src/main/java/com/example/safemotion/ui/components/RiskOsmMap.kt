@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -20,13 +21,17 @@ import com.example.safemotion.R
 import com.example.safemotion.data.model.MapPoint
 import com.example.safemotion.data.model.RiskZone
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.MapTileIndex
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
 
 private val BogotaCenter = MapPoint(latitude = 4.6765, longitude = -74.0600)
 
@@ -63,17 +68,23 @@ private object MapTilerStreets : OnlineTileSourceBase(
  */
 @Composable
 fun RiskOsmMap(
+    modifier: Modifier = Modifier,
     zones: List<RiskZone>,
     selectedZoneId: String?,
     onZoneClick: (String) -> Unit,
-    modifier: Modifier = Modifier,
     userLocation: MapPoint? = null,
     initialCenter: MapPoint = BogotaCenter,
-    recenterKey: Int = 0
+    recenterKey: Int = 0,
+    destination: MapPoint? = null,
+    routePoints: List<MapPoint> = emptyList(),
+    destinationLabel: String = "",
+    routeColor: Color = Color(0xFF6750A4),
+    onMapClick: ((MapPoint) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val myLocationLabel = stringResource(R.string.map_my_location)
+    val currentMapClick = rememberUpdatedState(onMapClick)
 
     // El MapView se crea una sola vez y sobrevive a las recomposiciones.
     val mapView = remember {
@@ -88,6 +99,18 @@ fun RiskOsmMap(
             controller.setZoom(13.0)
             controller.setCenter(GeoPoint(initialCenter.latitude, initialCenter.longitude))
         }
+    }
+    val routeHash = remember { intArrayOf(0) }
+    val mapEventsOverlay = remember(mapView) {
+        MapEventsOverlay(object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(point: GeoPoint): Boolean {
+                val callback = currentMapClick.value ?: return false
+                callback(MapPoint(latitude = point.latitude, longitude = point.longitude))
+                return true
+            }
+
+            override fun longPressHelper(point: GeoPoint): Boolean = false
+        })
     }
 
     // El mapa se pausa y reanuda con el ciclo de vida de la pantalla.
@@ -125,6 +148,16 @@ fun RiskOsmMap(
             map.overlays.clear()
             // Créditos obligatorios de OpenStreetMap en la esquina del mapa.
             map.overlays.add(CopyrightOverlay(map.context))
+            if (onMapClick != null) map.overlays.add(mapEventsOverlay)
+            if (routePoints.size >= 2) {
+                map.overlays.add(
+                    Polyline(map).apply {
+                        outlinePaint.color = routeColor.toArgb()
+                        outlinePaint.strokeWidth = 10f
+                        setPoints(routePoints.map { GeoPoint(it.latitude, it.longitude) })
+                    }
+                )
+            }
             zones.forEach { zone ->
                 val marker = Marker(map).apply {
                     position = GeoPoint(zone.latitude, zone.longitude)
@@ -147,6 +180,27 @@ fun RiskOsmMap(
                     title = myLocationLabel
                 }
                 map.overlays.add(me)
+            }
+            destination?.let { point ->
+                map.overlays.add(
+                    Marker(map).apply {
+                        position = GeoPoint(point.latitude, point.longitude)
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        icon = pinIcon(map.context, routeColor)
+                        title = destinationLabel
+                    }
+                )
+            }
+            val currentRouteHash = routePoints.hashCode()
+            if (routePoints.size >= 2 && currentRouteHash != routeHash[0]) {
+                routeHash[0] = currentRouteHash
+                map.zoomToBoundingBox(
+                    BoundingBox.fromGeoPoints(
+                        routePoints.map { GeoPoint(it.latitude, it.longitude) }
+                    ),
+                    true,
+                    80
+                )
             }
             map.invalidate()
         }

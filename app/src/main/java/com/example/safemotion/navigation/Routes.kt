@@ -1,6 +1,7 @@
 package com.example.safemotion.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.example.safemotion.data.model.RouteProfile
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -11,6 +12,9 @@ data object HomeRoute : NavKey
 
 @Serializable
 data object PrepareRunRoute : NavKey
+
+@Serializable
+data class RoutePlannerRoute(val profile: RouteProfile) : NavKey
 
 @Serializable
 data object ActiveRunRoute : NavKey
