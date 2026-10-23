@@ -23,10 +23,10 @@ import com.example.safemotion.data.model.IncidentType
 
 @Composable
 fun IncidentAlertScreen(
+    modifier: Modifier = Modifier,
     uiState: RunUiState,
     onCancelAlert: () -> Unit,
-    onReturnToRun: () -> Unit,
-    modifier: Modifier = Modifier
+    onReturnToRun: () -> Unit
 ) {
     Scaffold(modifier = modifier) { innerPadding ->
         Column(

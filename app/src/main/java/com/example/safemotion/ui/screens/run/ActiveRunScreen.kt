@@ -30,10 +30,10 @@ import com.example.safemotion.data.model.RunActivityType
 
 @Composable
 fun ActiveRunScreen(
+    modifier: Modifier = Modifier,
     uiState: RunUiState,
     onSimulateIncident: (IncidentType) -> Unit,
-    onFinishRun: () -> Unit,
-    modifier: Modifier = Modifier
+    onFinishRun: () -> Unit
 ) {
     val session = uiState.session ?: return
     var showFinishConfirmation by rememberSaveable { mutableStateOf(false) }
