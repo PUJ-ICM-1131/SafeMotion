@@ -125,6 +125,7 @@
         <item quantity="other">%1$d personas lo confirmaron</item>
     </plurals>
     <string name="risk_no_confirmations">Aún nadie lo ha confirmado</string>
+    <string name="map_my_location">Tu ubicación</string>
 
     <!-- Reporte de riesgos (HU-10) -->
     <string name="report_risk_title">Reportar riesgo</string>
