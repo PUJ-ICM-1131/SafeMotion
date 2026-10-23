@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "482824280423",
+    "project_id": "safemotion",
+    "storage_bucket": "safemotion.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:482824280423:android:ed7928d10c0f3cea5b77c2",
+        "android_client_info": {
+          "package_name": "com.example.safemotion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCW3uJI5B7cPiBvjhgIKmsNih30OH4ll1k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

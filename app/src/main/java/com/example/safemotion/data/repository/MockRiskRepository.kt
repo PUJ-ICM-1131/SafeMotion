@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 object MockRiskRepository {
-    const val CURRENT_LOCATION = "Parque Simón Bolívar, entrada Carrera 60"
+    // Coordenadas por defecto (Parque Simón Bolívar) si el reporte no trae ubicación.
+    const val DEFAULT_LATITUDE = 4.6580
+    const val DEFAULT_LONGITUDE = -74.0930
 
     private val initialZones = listOf(
         RiskZone(
@@ -20,8 +22,8 @@ object MockRiskRepository {
             reporter = "Daniel O.",
             confirmations = 12,
             evidences = listOf(RiskEvidence("e1", "5:41 a. m."), RiskEvidence("e2", "5:43 a. m.")),
-            mapX = -0.61f,
-            mapY = -0.31f
+            latitude = 4.6990,
+            longitude = -74.0450
         ),
         RiskZone(
             id = "z2",
@@ -32,8 +34,8 @@ object MockRiskRepository {
             reporter = "Laura G.",
             confirmations = 8,
             evidences = listOf(RiskEvidence("e3", "5:52 a. m."), RiskEvidence("e4", "5:55 a. m.")),
-            mapX = 0.23f,
-            mapY = -0.41f
+            latitude = 4.6835,
+            longitude = -74.0836
         ),
         RiskZone(
             id = "z3",
@@ -44,8 +46,8 @@ object MockRiskRepository {
             reporter = "Camilo R.",
             confirmations = 5,
             evidences = listOf(RiskEvidence("e5", "8:14 p. m.")),
-            mapX = 0.72f,
-            mapY = -0.13f
+            latitude = 4.6735,
+            longitude = -74.0540
         ),
         RiskZone(
             id = "z4",
@@ -56,8 +58,8 @@ object MockRiskRepository {
             reporter = "Sofía C.",
             confirmations = 15,
             evidences = listOf(RiskEvidence("e6", "6:02 a. m."), RiskEvidence("e7", "6:03 a. m.")),
-            mapX = -0.28f,
-            mapY = 0.12f
+            latitude = 4.6866,
+            longitude = -74.0488
         ),
         RiskZone(
             id = "z5",
@@ -68,8 +70,8 @@ object MockRiskRepository {
             reporter = "Andrés P.",
             confirmations = 9,
             evidences = listOf(RiskEvidence("e8", "6:30 a. m.")),
-            mapX = 0.54f,
-            mapY = 0.37f
+            latitude = 4.7083,
+            longitude = -74.0557
         ),
         RiskZone(
             id = "z6",
@@ -80,17 +82,9 @@ object MockRiskRepository {
             reporter = "Juliana M.",
             confirmations = 7,
             evidences = listOf(RiskEvidence("e9", "5:20 a. m.")),
-            mapX = 0.03f,
-            mapY = 0.51f
+            latitude = 4.6560,
+            longitude = -74.0566
         )
-    )
-
-    private val freeSpots = listOf(
-        -0.35f to -0.55f,
-        0.45f to 0.05f,
-        -0.65f to 0.40f,
-        0.10f to -0.20f,
-        0.70f to 0.60f
     )
 
     private val _zones = MutableStateFlow(initialZones)
@@ -101,9 +95,14 @@ object MockRiskRepository {
 
     private var lastReportedZoneId: String? = null
 
-    fun addReport(category: RiskCategory, description: String, place: String): RiskZone {
-        val newReports = _zones.value.size - initialZones.size
-        val spot = freeSpots[newReports % freeSpots.size]
+    fun addReport(
+        category: RiskCategory,
+        description: String,
+        place: String,
+        latitude: Double = DEFAULT_LATITUDE,
+        longitude: Double = DEFAULT_LONGITUDE,
+        photoPath: String? = null
+    ): RiskZone {
         val zone = RiskZone(
             id = "z${_zones.value.size + 1}",
             category = category,
@@ -112,9 +111,9 @@ object MockRiskRepository {
             reportedAt = "Hoy",
             reporter = currentReporter(),
             confirmations = 0,
-            evidences = listOf(RiskEvidence("e${_zones.value.size + 10}", "Ahora")),
-            mapX = spot.first,
-            mapY = spot.second
+            evidences = listOf(RiskEvidence("e${_zones.value.size + 10}", "Ahora", photoPath)),
+            latitude = latitude,
+            longitude = longitude
         )
         _zones.value = _zones.value + zone
         lastReportedZoneId = zone.id
@@ -136,13 +135,15 @@ object MockRiskRepository {
     }
 
     private fun currentReporter(): String {
-        val parts = MockAuthRepository.currentUser?.name.orEmpty()
+        val user = FirebaseAuthRepository.currentUser
+        val parts = user?.name.orEmpty()
             .split(" ")
             .filter { it.isNotBlank() }
         return when {
             parts.size >= 2 -> "${parts.first()} ${parts.last().first()}."
             parts.size == 1 -> parts.first()
-            else -> "Mariana R."
+            // Cuentas sin nombre guardado: se usa la parte del correo antes de la @.
+            else -> user?.email.orEmpty().substringBefore("@")
         }
     }
 }

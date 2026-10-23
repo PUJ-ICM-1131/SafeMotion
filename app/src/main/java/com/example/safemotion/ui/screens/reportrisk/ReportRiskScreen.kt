@@ -1,5 +1,11 @@
 package com.example.safemotion.ui.screens.reportrisk
 
+import android.Manifest
+import android.net.Uri
+import androidx.annotation.StringRes
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,12 +32,14 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -51,19 +59,32 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.safemotion.R
 import com.example.safemotion.data.model.RiskCategory
-import com.example.safemotion.ui.components.EvidencePlaceholder
+import com.example.safemotion.ui.components.EvidencePhoto
 import com.example.safemotion.ui.components.icon
 import com.example.safemotion.ui.components.labelRes
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val LocationPermissions = listOf(
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.ACCESS_COARSE_LOCATION
+)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ReportRiskScreen(
     uiState: ReportRiskUiState,
     onCategorySelected: (RiskCategory) -> Unit,
     onDescriptionChange: (String) -> Unit,
     onUseCurrentLocation: () -> Unit,
-    onAttachPhoto: (MockPhotoSource) -> Unit,
+    onLocationDenied: () -> Unit,
+    onPrepareCameraPhoto: () -> Uri,
+    onCameraResult: (Boolean) -> Unit,
+    onCameraDenied: () -> Unit,
+    onGalleryPhotoPicked: (Uri) -> Unit,
     onRemovePhoto: () -> Unit,
     onSubmit: () -> Boolean,
     onReportSent: () -> Unit,
@@ -74,6 +95,46 @@ fun ReportRiskScreen(
     val scope = rememberCoroutineScope()
     val sentMessage = stringResource(R.string.report_sent)
     val viewLabel = stringResource(R.string.report_view)
+
+    // Cámara: la app de cámara del sistema escribe la foto en la Uri que le damos.
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success -> onCameraResult(success) }
+
+    // Permiso de cámara en tiempo de ejecución con Accompanist.
+    val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA) { granted ->
+        if (granted) cameraLauncher.launch(onPrepareCameraPhoto()) else onCameraDenied()
+    }
+
+    // Permiso de ubicación: basta con la precisa o la aproximada.
+    val locationPermissions = rememberMultiplePermissionsState(LocationPermissions) { results ->
+        if (results.values.any { it }) onUseCurrentLocation() else onLocationDenied()
+    }
+
+    // Galería: selector de fotos del sistema, no necesita permiso.
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri -> uri?.let(onGalleryPhotoPicked) }
+
+    val takePhoto = {
+        if (cameraPermission.status.isGranted) {
+            cameraLauncher.launch(onPrepareCameraPhoto())
+        } else {
+            cameraPermission.launchPermissionRequest()
+        }
+    }
+    val requestLocation = {
+        if (locationPermissions.permissions.any { it.status.isGranted }) {
+            onUseCurrentLocation()
+        } else {
+            locationPermissions.launchMultiplePermissionRequest()
+        }
+    }
+    val pickFromGallery = {
+        galleryLauncher.launch(
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        )
+    }
 
     Scaffold(
         modifier = modifier,
@@ -164,11 +225,14 @@ fun ReportRiskScreen(
             )
             LocationSection(
                 location = uiState.location,
-                onUseCurrentLocation = onUseCurrentLocation
+                isLocating = uiState.isLocating,
+                locationUnavailable = uiState.locationUnavailable,
+                onUseCurrentLocation = requestLocation
             )
             PhotoSection(
                 uiState = uiState,
-                onAttachPhoto = onAttachPhoto,
+                onTakePhoto = takePhoto,
+                onPickFromGallery = pickFromGallery,
                 onRemovePhoto = onRemovePhoto
             )
         }
@@ -221,6 +285,8 @@ private fun CategorySection(
 @Composable
 private fun LocationSection(
     location: String,
+    isLocating: Boolean,
+    locationUnavailable: Boolean,
     onUseCurrentLocation: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -235,16 +301,28 @@ private fun LocationSection(
         if (location.isEmpty()) {
             OutlinedButton(
                 onClick = onUseCurrentLocation,
+                enabled = !isLocating,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Default.MyLocation,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+                if (isLocating) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
                 Text(
                     text = stringResource(R.string.report_use_current_location),
                     modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+            if (locationUnavailable) {
+                Text(
+                    text = stringResource(R.string.map_location_unavailable),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
                 )
             }
         } else {
@@ -282,11 +360,12 @@ private fun LocationSection(
 @Composable
 private fun PhotoSection(
     uiState: ReportRiskUiState,
-    onAttachPhoto: (MockPhotoSource) -> Unit,
+    onTakePhoto: () -> Unit,
+    onPickFromGallery: () -> Unit,
     onRemovePhoto: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val photoSource = uiState.photoSource
+    val photoPath = uiState.photoPath
     val hasError = uiState.photoMissing
     Column(
         modifier = modifier,
@@ -297,19 +376,19 @@ private fun PhotoSection(
             style = MaterialTheme.typography.titleMedium,
             color = if (hasError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
         )
-        if (photoSource != null) {
-            val photoLabel = when (photoSource) {
-                MockPhotoSource.CAMERA -> stringResource(R.string.report_photo_camera_mock)
-                MockPhotoSource.GALLERY -> stringResource(R.string.report_photo_gallery_mock)
-            }
+        if (photoPath != null) {
             Box(modifier = Modifier.fillMaxWidth()) {
-                EvidencePlaceholder(
-                    label = photoLabel,
-                    modifier = Modifier.fillMaxWidth().height(160.dp)
+                EvidencePhoto(
+                    path = photoPath,
+                    contentDescription = stringResource(R.string.report_photo_description),
+                    modifier = Modifier.fillMaxWidth().height(200.dp)
                 )
                 IconButton(
                     onClick = onRemovePhoto,
-                    modifier = Modifier.align(Alignment.TopEnd)
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
@@ -317,6 +396,17 @@ private fun PhotoSection(
                     )
                 }
             }
+            Text(
+                text = stringResource(
+                    if (uiState.photoSource == PhotoSource.GALLERY) {
+                        R.string.report_photo_from_gallery
+                    } else {
+                        R.string.report_photo_from_camera
+                    }
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         } else {
             Surface(
                 modifier = Modifier.fillMaxWidth().height(128.dp),
@@ -340,50 +430,42 @@ private fun PhotoSection(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.AddAPhoto,
-                        contentDescription = null,
-                        tint = if (hasError) {
-                            MaterialTheme.colorScheme.onErrorContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                    )
-                    Text(
-                        text = stringResource(R.string.report_no_photo),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (hasError) {
-                            MaterialTheme.colorScheme.onErrorContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                    )
+                    if (uiState.isSavingPhoto) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.AddAPhoto,
+                            contentDescription = null,
+                            tint = if (hasError) {
+                                MaterialTheme.colorScheme.onErrorContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                        Text(
+                            text = stringResource(R.string.report_no_photo),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (hasError) {
+                                MaterialTheme.colorScheme.onErrorContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
                 }
             }
-            if (hasError) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Error,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                    Text(
-                        text = stringResource(R.string.report_photo_error),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
+            when {
+                uiState.cameraDenied -> PhotoMessage(R.string.report_camera_denied)
+                uiState.photoFailed -> PhotoMessage(R.string.report_photo_save_failed)
+                hasError -> PhotoMessage(R.string.report_photo_error)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 FilledTonalButton(
-                    onClick = { onAttachPhoto(MockPhotoSource.CAMERA) },
+                    onClick = onTakePhoto,
+                    enabled = !uiState.isSavingPhoto,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(
@@ -397,7 +479,8 @@ private fun PhotoSection(
                     )
                 }
                 OutlinedButton(
-                    onClick = { onAttachPhoto(MockPhotoSource.GALLERY) },
+                    onClick = onPickFromGallery,
+                    enabled = !uiState.isSavingPhoto,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(
@@ -412,5 +495,29 @@ private fun PhotoSection(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PhotoMessage(
+    @StringRes messageRes: Int,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Error,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = MaterialTheme.colorScheme.error
+        )
+        Text(
+            text = stringResource(messageRes),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error
+        )
     }
 }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carpetas internas que la app comparte con la cámara a través del FileProvider. -->
+<paths>
+    <files-path name="evidence" path="evidence/" />
+</paths>

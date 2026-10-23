@@ -1,10 +1,14 @@
 package com.example.safemotion.data.repository
 
-import com.example.safemotion.data.model.MockUser
+import com.example.safemotion.data.model.AppUser
+
+enum class AuthFailure { InvalidCredentials, ExistingEmail, WeakPassword, Network, Unknown }
 
 interface AuthRepository {
-    val currentUser: MockUser?
-    fun signIn(email: String, password: String): Boolean
-    fun register(user: MockUser): Boolean
+    val currentUser: AppUser?
+    fun restoreSession(): Boolean
+    suspend fun signIn(email: String, password: String): AuthFailure?
+    suspend fun register(name: String, email: String, password: String): AuthFailure?
+    suspend fun sendPasswordReset(email: String): AuthFailure?
     fun signOut()
 }
