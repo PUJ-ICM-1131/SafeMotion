@@ -31,7 +31,7 @@
         <item quantity="other">%1$d guardianes aceptados</item>
     </plurals>
     <string name="last_run_distance">%1$s km en el último recorrido</string>
-    <string name="mock_sensor_status">GPS simulado · Sensores al iniciar un recorrido</string>
+    <string name="home_sensor_status">Acelerómetro y giroscopio listos para detectar caídas al iniciar un recorrido</string>
     <string name="prepare_run">Preparar recorrido</string>
     <string name="back_to_home">Volver al inicio</string>
     <string name="prepare_run_title">Preparar recorrido</string>
@@ -113,7 +113,7 @@
 
     <!-- Mapa de riesgos (HU-09) -->
     <string name="risk_map_title">Zonas de riesgo</string>
-    <string name="risk_map_description">Mapa simulado con las zonas de riesgo reportadas por la comunidad</string>
+    <string name="risk_map_description">Mapa de OpenStreetMap con las zonas de riesgo reportadas por la comunidad</string>
     <string name="risk_search_hint">Buscar un sector de Bogotá</string>
     <string name="risk_legend_title">Leyenda</string>
     <string name="risk_legend_item">%1$s (%2$d)</string>

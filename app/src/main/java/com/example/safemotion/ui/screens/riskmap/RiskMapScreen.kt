@@ -40,6 +40,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.example.safemotion.R
 import com.example.safemotion.data.model.RiskCategory
@@ -97,11 +99,14 @@ fun RiskMapScreen(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
             )
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                val mapDescription = stringResource(R.string.risk_map_description)
                 RiskOsmMap(
                     zones = uiState.zones,
                     selectedZoneId = uiState.selectedZoneId,
                     onZoneClick = onZoneSelected,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .semantics { contentDescription = mapDescription },
                     userLocation = uiState.userLocation,
                     recenterKey = uiState.locationUpdates
                 )

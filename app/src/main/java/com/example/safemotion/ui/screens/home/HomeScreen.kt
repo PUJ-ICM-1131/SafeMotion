@@ -93,7 +93,7 @@ fun HomeScreen(
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            text = stringResource(R.string.mock_sensor_status),
+                            text = stringResource(R.string.home_sensor_status),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
