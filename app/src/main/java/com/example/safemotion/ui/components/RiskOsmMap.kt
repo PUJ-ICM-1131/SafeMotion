@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.draw.clipToBounds
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -119,7 +120,7 @@ fun RiskOsmMap(
 
     AndroidView(
         factory = { mapView },
-        modifier = modifier,
+        modifier = modifier.clipToBounds(),
         update = { map ->
             map.overlays.clear()
             // Créditos obligatorios de OpenStreetMap en la esquina del mapa.
