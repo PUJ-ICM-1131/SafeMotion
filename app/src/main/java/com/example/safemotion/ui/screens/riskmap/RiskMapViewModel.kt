@@ -1,10 +1,13 @@
 package com.example.safemotion.ui.screens.riskmap
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.safemotion.data.repository.LocationRepository
 import com.example.safemotion.data.repository.MockRiskRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class RiskMapViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(
@@ -49,5 +52,26 @@ class RiskMapViewModel : ViewModel() {
                 confirmedZoneIds = MockRiskRepository.confirmedZoneIds.value
             )
         }
+    }
+
+    // Se llama cuando el usuario ya dio el permiso de ubicación.
+    fun loadUserLocation(repository: LocationRepository) {
+        if (_uiState.value.isLocating) return
+        _uiState.update { it.copy(isLocating = true, locationUnavailable = false) }
+        viewModelScope.launch {
+            val location = repository.currentLocation()
+            _uiState.update {
+                it.copy(
+                    userLocation = location,
+                    isLocating = false,
+                    locationUnavailable = location == null
+                )
+            }
+        }
+    }
+
+    // Se llama si el usuario negó el permiso de ubicación.
+    fun onLocationDenied() {
+        _uiState.update { it.copy(isLocating = false, locationUnavailable = true) }
     }
 }
