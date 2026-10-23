@@ -42,12 +42,12 @@ import com.example.safemotion.data.model.Contact
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectContactsScreen(
+    modifier: Modifier = Modifier,
     uiState: GuardiansUiState,
     onQueryChange: (String) -> Unit,
     onToggleContact: (String) -> Unit,
     onSend: () -> Unit,
-    onClose: () -> Unit,
-    modifier: Modifier = Modifier
+    onClose: () -> Unit
 ) {
     Scaffold(
         modifier = modifier,
@@ -124,10 +124,10 @@ fun SelectContactsScreen(
 
 @Composable
 private fun ContactRow(
+    modifier: Modifier = Modifier,
     contact: Contact,
     selected: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier
+    onToggle: () -> Unit
 ) {
     val background = if (selected) {
         MaterialTheme.colorScheme.primaryContainer

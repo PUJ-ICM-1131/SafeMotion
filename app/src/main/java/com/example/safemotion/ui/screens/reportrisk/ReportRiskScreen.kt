@@ -76,6 +76,7 @@ private val LocationPermissions = listOf(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ReportRiskScreen(
+    modifier: Modifier = Modifier,
     uiState: ReportRiskUiState,
     onCategorySelected: (RiskCategory) -> Unit,
     onDescriptionChange: (String) -> Unit,
@@ -88,8 +89,7 @@ fun ReportRiskScreen(
     onRemovePhoto: () -> Unit,
     onSubmit: () -> Boolean,
     onReportSent: () -> Unit,
-    onClose: () -> Unit,
-    modifier: Modifier = Modifier
+    onClose: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -241,9 +241,9 @@ fun ReportRiskScreen(
 
 @Composable
 private fun CategorySection(
+    modifier: Modifier = Modifier,
     selected: RiskCategory?,
-    onCategorySelected: (RiskCategory) -> Unit,
-    modifier: Modifier = Modifier
+    onCategorySelected: (RiskCategory) -> Unit
 ) {
     Column(
         modifier = modifier,
@@ -284,11 +284,11 @@ private fun CategorySection(
 
 @Composable
 private fun LocationSection(
+    modifier: Modifier = Modifier,
     location: String,
     isLocating: Boolean,
     locationUnavailable: Boolean,
-    onUseCurrentLocation: () -> Unit,
-    modifier: Modifier = Modifier
+    onUseCurrentLocation: () -> Unit
 ) {
     Column(
         modifier = modifier,
@@ -359,11 +359,11 @@ private fun LocationSection(
 
 @Composable
 private fun PhotoSection(
+    modifier: Modifier = Modifier,
     uiState: ReportRiskUiState,
     onTakePhoto: () -> Unit,
     onPickFromGallery: () -> Unit,
-    onRemovePhoto: () -> Unit,
-    modifier: Modifier = Modifier
+    onRemovePhoto: () -> Unit
 ) {
     val photoPath = uiState.photoPath
     val hasError = uiState.photoMissing
@@ -455,9 +455,9 @@ private fun PhotoSection(
                 }
             }
             when {
-                uiState.cameraDenied -> PhotoMessage(R.string.report_camera_denied)
-                uiState.photoFailed -> PhotoMessage(R.string.report_photo_save_failed)
-                hasError -> PhotoMessage(R.string.report_photo_error)
+                uiState.cameraDenied -> PhotoMessage(messageRes = R.string.report_camera_denied)
+                uiState.photoFailed -> PhotoMessage(messageRes = R.string.report_photo_save_failed)
+                hasError -> PhotoMessage(messageRes = R.string.report_photo_error)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -500,8 +500,8 @@ private fun PhotoSection(
 
 @Composable
 private fun PhotoMessage(
-    @StringRes messageRes: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    @StringRes messageRes: Int
 ) {
     Row(
         modifier = modifier,

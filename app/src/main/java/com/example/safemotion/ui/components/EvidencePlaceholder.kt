@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 /** Recuadro que representa una foto de evidencia mientras las fotos se simulan. */
 @Composable
 fun EvidencePlaceholder(
-    label: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    label: String
 ) {
     Surface(
         modifier = modifier.heightIn(min = 96.dp),

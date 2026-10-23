@@ -62,14 +62,14 @@ private val LocationPermissions = listOf(
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun RiskMapScreen(
+    modifier: Modifier = Modifier,
     uiState: RiskMapUiState,
     onZoneSelected: (String) -> Unit,
     onDismissZone: () -> Unit,
     onConfirmZone: (String) -> Unit,
     onReport: () -> Unit,
     onLocationPermissionGranted: () -> Unit,
-    onLocationDenied: () -> Unit,
-    modifier: Modifier = Modifier
+    onLocationDenied: () -> Unit
 ) {
     // Permiso de ubicación con Accompanist: basta con la precisa o la aproximada.
     val locationPermissions = rememberMultiplePermissionsState(LocationPermissions) { results ->
@@ -144,9 +144,9 @@ fun RiskMapScreen(
 
 @Composable
 private fun MapSearchBar(
+    modifier: Modifier = Modifier,
     isLocating: Boolean,
-    onLocate: () -> Unit,
-    modifier: Modifier = Modifier
+    onLocate: () -> Unit
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -216,8 +216,8 @@ private fun LocationNotice(modifier: Modifier = Modifier) {
 
 @Composable
 private fun RiskLegend(
-    zones: List<RiskZone>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    zones: List<RiskZone>
 ) {
     Card(
         modifier = modifier,
@@ -255,11 +255,11 @@ private fun RiskLegend(
 
 @Composable
 private fun ZoneDetailPanel(
+    modifier: Modifier = Modifier,
     zone: RiskZone,
     confirmed: Boolean,
     onConfirm: () -> Unit,
-    onClose: () -> Unit,
-    modifier: Modifier = Modifier
+    onClose: () -> Unit
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -344,9 +344,9 @@ private fun ZoneDetailPanel(
 
 @Composable
 private fun DetailItem(
+    modifier: Modifier = Modifier,
     icon: ImageVector,
-    text: String,
-    modifier: Modifier = Modifier
+    text: String
 ) {
     Row(
         modifier = modifier,
@@ -369,8 +369,8 @@ private fun DetailItem(
 
 @Composable
 private fun EvidenceRow(
-    evidences: List<RiskEvidence>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    evidences: List<RiskEvidence>
 ) {
     val visible = evidences.take(2)
     Row(

@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Sensors
@@ -38,10 +38,10 @@ import com.example.safemotion.ui.components.TrackingMap
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MonitoringScreen(
+    modifier: Modifier = Modifier,
     uiState: MonitoringUiState,
     onBack: () -> Unit,
-    onCall: () -> Unit,
-    modifier: Modifier = Modifier
+    onCall: () -> Unit
 ) {
     Scaffold(
         modifier = modifier,
@@ -50,7 +50,7 @@ fun MonitoringScreen(
                 title = { Text(uiState.session?.runnerName ?: stringResource(R.string.monitoring_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -180,7 +180,11 @@ fun MonitoringScreen(
 }
 
 @Composable
-private fun MetricCard(label: String, value: String, modifier: Modifier = Modifier) {
+private fun MetricCard(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String
+) {
     Card(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium)

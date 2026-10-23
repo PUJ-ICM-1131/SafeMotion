@@ -28,9 +28,9 @@ import kotlinx.coroutines.withContext
 /** Muestra una foto guardada en el almacenamiento interno de la app. */
 @Composable
 fun EvidencePhoto(
+    modifier: Modifier = Modifier,
     path: String,
-    contentDescription: String?,
-    modifier: Modifier = Modifier
+    contentDescription: String?
 ) {
     // Se lee y decodifica en Dispatchers.IO para no congelar la pantalla.
     val bitmap by produceState<ImageBitmap?>(initialValue = null, path) {

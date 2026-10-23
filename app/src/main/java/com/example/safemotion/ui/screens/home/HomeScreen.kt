@@ -36,6 +36,7 @@ import com.example.safemotion.R
 
 @Composable
 fun HomeScreen(
+    modifier: Modifier = Modifier,
     uiState: HomeUiState,
     onSignOut: () -> Unit,
     onPrepareRun: () -> Unit,
@@ -45,8 +46,7 @@ fun HomeScreen(
     onReceivedAlert: () -> Unit,
     onRiskMap: () -> Unit,
     onReportRisk: () -> Unit,
-    onHistory: () -> Unit,
-    modifier: Modifier = Modifier
+    onHistory: () -> Unit
 ) {
     Scaffold(modifier = modifier) { innerPadding ->
         LazyColumn(
@@ -109,23 +109,23 @@ fun HomeScreen(
             item {
                 Text(stringResource(R.string.home_quick_access), style = MaterialTheme.typography.titleLarge)
             }
-            item { HomeAction(Icons.Default.Shield, R.string.home_guardians, onGuardians) }
-            item { HomeAction(Icons.Default.Mail, R.string.home_invitations, onInvitations) }
-            item { HomeAction(Icons.Default.Visibility, R.string.home_monitoring, onMonitoring) }
-            item { HomeAction(Icons.Default.NotificationsActive, R.string.home_received_alert, onReceivedAlert) }
-            item { HomeAction(Icons.Default.Map, R.string.home_risk_map, onRiskMap) }
-            item { HomeAction(Icons.Default.Warning, R.string.home_report_risk, onReportRisk) }
-            item { HomeAction(Icons.Default.History, R.string.home_history, onHistory) }
+            item { HomeAction(icon = Icons.Default.Shield, labelRes = R.string.home_guardians, onClick = onGuardians) }
+            item { HomeAction(icon = Icons.Default.Mail, labelRes = R.string.home_invitations, onClick = onInvitations) }
+            item { HomeAction(icon = Icons.Default.Visibility, labelRes = R.string.home_monitoring, onClick = onMonitoring) }
+            item { HomeAction(icon = Icons.Default.NotificationsActive, labelRes = R.string.home_received_alert, onClick = onReceivedAlert) }
+            item { HomeAction(icon = Icons.Default.Map, labelRes = R.string.home_risk_map, onClick = onRiskMap) }
+            item { HomeAction(icon = Icons.Default.Warning, labelRes = R.string.home_report_risk, onClick = onReportRisk) }
+            item { HomeAction(icon = Icons.Default.History, labelRes = R.string.home_history, onClick = onHistory) }
         }
     }
 }
 
 @Composable
 private fun HomeAction(
+    modifier: Modifier = Modifier,
     icon: ImageVector,
     labelRes: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit
 ) {
     OutlinedButton(onClick = onClick, modifier = modifier.fillMaxWidth()) {
         Icon(icon, contentDescription = null)

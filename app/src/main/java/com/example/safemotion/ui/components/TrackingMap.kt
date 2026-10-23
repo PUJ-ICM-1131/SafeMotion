@@ -17,9 +17,9 @@ import com.example.safemotion.data.model.TrackPoint
 
 @Composable
 fun TrackingMap(
+    modifier: Modifier = Modifier,
     route: List<TrackPoint>,
-    interrupted: Boolean,
-    modifier: Modifier = Modifier
+    interrupted: Boolean
 ) {
     Box(
         modifier = modifier

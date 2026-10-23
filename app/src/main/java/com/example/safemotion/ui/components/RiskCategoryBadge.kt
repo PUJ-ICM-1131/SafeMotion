@@ -15,8 +15,8 @@ import com.example.safemotion.data.model.RiskCategory
 
 @Composable
 fun RiskCategoryBadge(
-    category: RiskCategory,
     modifier: Modifier = Modifier,
+    category: RiskCategory,
     size: Dp = 40.dp
 ) {
     Box(

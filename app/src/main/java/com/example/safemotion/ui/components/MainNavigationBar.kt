@@ -25,9 +25,9 @@ private data class MainNavigationItem(
 
 @Composable
 fun MainNavigationBar(
+    modifier: Modifier = Modifier,
     selected: MainDestination,
-    onDestinationSelected: (MainDestination) -> Unit,
-    modifier: Modifier = Modifier
+    onDestinationSelected: (MainDestination) -> Unit
 ) {
     val items = listOf(
         MainNavigationItem(MainDestination.HOME, R.string.main_nav_home, Icons.Default.Home),

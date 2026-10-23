@@ -42,9 +42,9 @@ import com.example.safemotion.data.model.initialsOf
 
 @Composable
 fun GuardiansScreen(
+    modifier: Modifier = Modifier,
     uiState: GuardiansUiState,
-    onInvite: () -> Unit,
-    modifier: Modifier = Modifier
+    onInvite: () -> Unit
 ) {
     Scaffold(
         modifier = modifier,
@@ -74,8 +74,8 @@ fun GuardiansScreen(
 
 @Composable
 private fun GuardiansList(
-    guardians: List<Guardian>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    guardians: List<Guardian>
 ) {
     LazyColumn(
         modifier = modifier,
@@ -130,8 +130,8 @@ private fun GuardiansList(
 
 @Composable
 private fun GuardianRow(
-    guardian: Guardian,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    guardian: Guardian
 ) {
     Row(
         modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -156,8 +156,8 @@ private fun GuardianRow(
 
 @Composable
 fun InitialsAvatar(
-    name: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    name: String
 ) {
     Surface(
         modifier = modifier.size(44.dp),
@@ -176,8 +176,8 @@ fun InitialsAvatar(
 
 @Composable
 private fun StatusChip(
-    status: InvitationStatus,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    status: InvitationStatus
 ) {
     val label = when (status) {
         InvitationStatus.ACCEPTED -> stringResource(R.string.guardian_status_accepted)
@@ -227,8 +227,8 @@ private fun StatusChip(
 
 @Composable
 private fun GuardiansEmptyState(
-    onInvite: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onInvite: () -> Unit
 ) {
     Column(
         modifier = modifier.padding(24.dp),

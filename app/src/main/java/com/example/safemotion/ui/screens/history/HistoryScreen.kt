@@ -37,9 +37,9 @@ import java.util.Date
 
 @Composable
 fun HistoryScreen(
+    modifier: Modifier = Modifier,
     uiState: HistoryUiState,
-    onStartRun: () -> Unit,
-    modifier: Modifier = Modifier
+    onStartRun: () -> Unit
 ) {
     Scaffold(modifier = modifier) { innerPadding ->
         if (uiState.isEmpty) {
@@ -72,7 +72,10 @@ fun HistoryScreen(
 }
 
 @Composable
-private fun HistoryCard(run: HistoryRunItem, modifier: Modifier = Modifier) {
+private fun HistoryCard(
+    modifier: Modifier = Modifier,
+    run: HistoryRunItem
+) {
     val durationHours = run.durationSeconds / 3_600
     val remainingMinutes = run.durationSeconds % 3_600 / 60
     val duration = if (durationHours > 0) {
@@ -140,7 +143,10 @@ private fun HistoryCard(run: HistoryRunItem, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun EmptyHistory(onStartRun: () -> Unit, modifier: Modifier = Modifier) {
+private fun EmptyHistory(
+    modifier: Modifier = Modifier,
+    onStartRun: () -> Unit
+) {
     Column(
         modifier = modifier.padding(28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

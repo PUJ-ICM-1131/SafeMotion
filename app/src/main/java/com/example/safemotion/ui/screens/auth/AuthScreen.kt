@@ -37,14 +37,14 @@ import com.example.safemotion.R
 
 @Composable
 fun AuthScreen(
+    modifier: Modifier = Modifier,
     uiState: AuthUiState,
     onModeChange: (AuthMode) -> Unit,
     onNameChange: (String) -> Unit,
     onPhoneChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-    onSubmit: () -> Unit,
-    modifier: Modifier = Modifier
+    onSubmit: () -> Unit
 ) {
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 

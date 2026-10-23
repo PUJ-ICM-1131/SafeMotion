@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.LocationOn
@@ -37,11 +37,11 @@ import java.util.Date
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceivedAlertScreen(
+    modifier: Modifier = Modifier,
     uiState: ReceivedAlertUiState,
     onBack: () -> Unit,
     onOpenMap: (String) -> Unit,
-    onCall: () -> Unit,
-    modifier: Modifier = Modifier
+    onCall: () -> Unit
 ) {
     Scaffold(
         modifier = modifier,
@@ -50,7 +50,7 @@ fun ReceivedAlertScreen(
                 title = { Text(stringResource(R.string.received_alert_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -149,10 +149,10 @@ fun ReceivedAlertScreen(
 
 @Composable
 private fun AlertDetail(
+    modifier: Modifier = Modifier,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    value: String,
-    modifier: Modifier = Modifier
+    value: String
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),

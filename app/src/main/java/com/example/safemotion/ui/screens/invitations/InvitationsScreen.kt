@@ -52,11 +52,11 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InvitationsScreen(
+    modifier: Modifier = Modifier,
     uiState: InvitationsUiState,
     onRespond: (String) -> Unit,
     onUndo: () -> Unit,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    onBack: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -129,10 +129,10 @@ fun InvitationsScreen(
 
 @Composable
 private fun InvitationCard(
+    modifier: Modifier = Modifier,
     invitation: ReceivedInvitation,
     onAccept: () -> Unit,
-    onReject: () -> Unit,
-    modifier: Modifier = Modifier
+    onReject: () -> Unit
 ) {
     val activityIcon = when (invitation.activity) {
         ActivityType.RUNNING -> Icons.AutoMirrored.Filled.DirectionsRun

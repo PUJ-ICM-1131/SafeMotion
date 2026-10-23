@@ -1,7 +1,7 @@
 # SafeMotion
 Safe Motion - Equipo 2 - Nexo Móvil.
 
-Base Android para la primera entrega. Incluye una Activity, tema claro y oscuro, Navigation 3, autenticación simulada, inicio y un recorrido de prueba con alerta. Guardianes, mapa, monitoreo e historial todavía necesitan sus pantallas.
+Aplicación Android de acompañamiento para corredores y ciclistas. Esta versión corresponde a la Entrega 2: funciona para un usuario y mantiene datos de prueba para guardianes y alertas recibidas.
 
 ## Ejecutar
 Abrir esta carpeta en Android Studio, instalar el SDK 37 y sincronizar Gradle. Ejecutar `app` en un emulador o dispositivo con Android 7.0 (API 24) o superior.
@@ -9,28 +9,23 @@ Abrir esta carpeta en Android Studio, instalar el SDK 37 y sincronizar Gradle. E
 Para compilar: `./gradlew :app:assembleDebug` (Windows: `gradlew.bat :app:assembleDebug`). Usar el JDK de Android Studio y configurar el SDK en `local.properties` o `ANDROID_HOME`.
 
 ## Organización
-- `ui/screens`: pantallas por funcionalidad; aquí irán sus ViewModel y UiState.
+- `ui/screens`: pantallas, ViewModel y UiState por funcionalidad.
 - `ui/components`: componentes compartidos.
 - `ui/theme`: colores y tipografía. Por ahora usamos la tipografía predeterminada de Material 3.
 - `navigation`: rutas y navegación.
-- `data/model` y `data/repository`: modelos y datos simulados.
+- `data/model`, `data/repository` y `data/sensor`: modelos, acceso a datos y lectura de sensores.
 
 Configuración inicial: AGP 9.1.1, Kotlin 2.4.0, Gradle 9.3.1, Compose BOM 2026.08.00 y Navigation 3 1.0.1.
 
 La propuesta, las historias y los diseños están en la [wiki](https://github.com/PUJ-ICM-1131/SafeMotion/wiki).
 
-## Probar el acceso
-La cuenta de prueba es `mariana.rojas@correo.com` con contraseña `clave1234`. También se puede registrar una cuenta nueva mientras la app está abierta. Las cuentas nuevas se pierden al cerrar el proceso. La recuperación de contraseña solo muestra una confirmación; no envía correos.
+## Probar la app
+Registra una cuenta con correo y contraseña o ingresa con una cuenta existente de Firebase. La recuperación de contraseña envía un correo real. No hay una cuenta de prueba fija.
 
-## Probar el recorrido
-Desde Inicio, entra a Preparar recorrido. Elige correr o ciclismo y al menos un guardián. El tiempo y la distancia son simulados. Puedes disparar una caída o inactividad de prueba, cancelar la alerta antes de 30 segundos o dejar que llegue a cero. Para terminar el recorrido se pide confirmación. Los recorridos y alertas confirmadas quedan en memoria mientras la app está abierta.
+Desde Inicio puedes abrir el mapa de riesgos, permitir la ubicación y crear un reporte con foto de cámara o galería. En Preparar recorrido, Planear ruta usa la ubicación actual y un destino elegido en el mapa; calcula rutas para correr o bicicleta con OSRM.
 
-## Etapas de esta copia local
-1. Datos y estado del recorrido simulado.
-2. Preparación y seguimiento del recorrido.
-3. Alerta de incidente y tiempo para cancelarla.
-4. Navegación, pruebas y conexión con Inicio.
+Para probar los sensores, selecciona al menos un guardián e inicia un recorrido. El acelerómetro y el giroscopio pueden activar una alerta de caída o inactividad; hay 30 segundos para cancelarla. Los botones de simulación permiten mostrar el flujo sin provocar una caída real.
 
-`MockRunRepository.availableGuardians` es una lista temporal: Juan Diego puede sustituirla al integrar su módulo. `completedRuns` y `confirmedIncidents` quedan disponibles para el historial y la alerta recibida que harán Samuel y el equipo. Aquí no hay GPS, sensores ni notificaciones reales.
+El GPS, el tiempo y la distancia mostrados durante el recorrido activo siguen simulados; la ubicación real se usa en el mapa, los reportes y la planeación de rutas. Los guardianes, sus avisos y los reportes comunitarios no se sincronizan entre usuarios. La detección por sensores se ha probado con la app abierta, no con la pantalla bloqueada.
 
-Las tres pantallas de este flujo comparten `RunViewModel` para conservar el reloj y la cuenta regresiva mientras se navega entre ellas. Al actualizar la wiki, conviene reflejar esta decisión en la tabla de pantallas y ViewModel.
+La implementación y los diagramas están en la [wiki](https://github.com/PUJ-ICM-1131/SafeMotion/wiki).
