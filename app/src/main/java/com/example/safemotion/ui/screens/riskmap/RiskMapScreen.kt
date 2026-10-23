@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddLocationAlt
 import androidx.compose.material.icons.filled.Close
@@ -54,6 +55,7 @@ import com.example.safemotion.ui.components.EvidencePlaceholder
 import com.example.safemotion.ui.components.RiskCategoryBadge
 import com.example.safemotion.ui.components.RiskOsmMap
 import com.example.safemotion.ui.components.labelRes
+import com.example.safemotion.ui.components.EvidencePhoto
 
 private val LocationPermissions = arrayOf(
     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -384,11 +386,20 @@ private fun EvidenceRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        visible.forEachIndexed { index, _ ->
-            EvidencePlaceholder(
-                label = stringResource(R.string.risk_evidence_label, index + 1),
-                modifier = Modifier.weight(1f)
-            )
+        visible.forEachIndexed { index, evidence ->
+            val label = stringResource(R.string.risk_evidence_label, index + 1)
+            val itemModifier = Modifier.weight(1f).height(120.dp)
+            val photoPath = evidence.photoPath
+            // Si la evidencia tiene foto real, se muestra; las zonas de ejemplo usan el recuadro.
+            if (photoPath != null) {
+                EvidencePhoto(
+                    path = photoPath,
+                    contentDescription = label,
+                    modifier = itemModifier
+                )
+            } else {
+                EvidencePlaceholder(label = label, modifier = itemModifier)
+            }
         }
         if (visible.size == 1) {
             Spacer(modifier = Modifier.weight(1f))
