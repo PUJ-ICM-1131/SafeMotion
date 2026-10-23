@@ -102,7 +102,8 @@ object MockRiskRepository {
         description: String,
         place: String,
         latitude: Double = DEFAULT_LATITUDE,
-        longitude: Double = DEFAULT_LONGITUDE
+        longitude: Double = DEFAULT_LONGITUDE,
+        photoPath: String? = null
     ): RiskZone {
         val zone = RiskZone(
             id = "z${_zones.value.size + 1}",
@@ -112,8 +113,7 @@ object MockRiskRepository {
             reportedAt = "Hoy",
             reporter = currentReporter(),
             confirmations = 0,
-            evidences = listOf(RiskEvidence("e${_zones.value.size + 10}", "Ahora")),
-            latitude = latitude,
+            evidences = listOf(RiskEvidence("e${_zones.value.size + 10}", "Ahora", photoPath)),            latitude = latitude,
             longitude = longitude
         )
         _zones.value = _zones.value + zone

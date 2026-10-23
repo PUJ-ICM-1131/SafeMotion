@@ -4,7 +4,8 @@ enum class RiskCategory { LIGHTING, INSECURITY, BAD_ROAD, HEAVY_TRAFFIC }
 
 data class RiskEvidence(
     val id: String,
-    val capturedAt: String
+    val capturedAt: String,
+    val photoPath: String? = null
 )
 
 data class RiskZone(
