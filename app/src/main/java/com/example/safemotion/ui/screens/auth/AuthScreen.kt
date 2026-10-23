@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -153,6 +156,8 @@ fun AuthScreen(
                             AuthMessage.ShortPassword -> R.string.error_short_password
                             AuthMessage.InvalidCredentials -> R.string.error_invalid_credentials
                             AuthMessage.ExistingEmail -> R.string.error_existing_email
+                            AuthMessage.NetworkError -> R.string.error_network
+                            AuthMessage.UnknownError -> R.string.error_unknown
                             AuthMessage.RecoverySent -> R.string.recovery_sent
                         }
                     ),
@@ -162,7 +167,18 @@ fun AuthScreen(
                 )
             }
 
-            Button(onClick = onSubmit, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = onSubmit,
+                enabled = !uiState.isLoading,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(Modifier.width(8.dp))
+                }
                 Text(
                     stringResource(
                         when (uiState.mode) {
@@ -178,11 +194,6 @@ fun AuthScreen(
                 TextButton(onClick = { onModeChange(AuthMode.Recover) }) {
                     Text(stringResource(R.string.forgot_password))
                 }
-                Text(
-                    text = stringResource(R.string.demo_account),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             } else if (uiState.mode == AuthMode.Recover) {
                 TextButton(onClick = { onModeChange(AuthMode.SignIn) }) {
                     Text(stringResource(R.string.back_to_sign_in))

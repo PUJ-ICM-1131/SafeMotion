@@ -15,13 +15,14 @@
     <string name="recover_description">Escribe tu correo para recibir un enlace de recuperación.</string>
     <string name="send_recovery_link">Enviar enlace</string>
     <string name="back_to_sign_in">Volver a ingresar</string>
-    <string name="recovery_sent">Enlace enviado. Revisa tu correo. Esta es una simulación.</string>
+    <string name="recovery_sent">Enlace enviado. Revisa tu correo.</string>
     <string name="error_missing_fields">Completa todos los campos.</string>
     <string name="error_invalid_email">Escribe un correo válido.</string>
     <string name="error_short_password">La contraseña debe tener al menos 8 caracteres.</string>
     <string name="error_invalid_credentials">Correo o contraseña incorrectos.</string>
     <string name="error_existing_email">Ya hay una cuenta con ese correo.</string>
-    <string name="demo_account">Cuenta de prueba: mariana.rojas@correo.com / clave1234</string>
+    <string name="error_network">No hay conexión. Revisa tu internet e intenta de nuevo.</string>
+    <string name="error_unknown">No se pudo completar. Intenta de nuevo.</string>
     <string name="hello_user">Hola, %1$s</string>
     <string name="sign_out">Salir</string>
     <string name="home_safety_title">Tu seguridad hoy</string>

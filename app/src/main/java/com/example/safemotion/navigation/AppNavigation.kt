@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
@@ -15,7 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.example.safemotion.data.repository.MockAuthRepository
+import com.example.safemotion.data.repository.FirebaseAuthRepository
 import com.example.safemotion.data.repository.MockGuardianTrackingRepository
 import com.example.safemotion.data.repository.MockRunRepository
 import com.example.safemotion.ui.components.MainDestination
@@ -46,9 +47,10 @@ import com.example.safemotion.ui.screens.riskmap.RiskMapViewModel
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
-    val backStack = rememberNavBackStack(AuthRoute)
     val context = LocalContext.current
     val authViewModel: AuthViewModel = viewModel()
+    val startRoute = remember { if (authViewModel.restoreSession()) HomeRoute else AuthRoute }
+    val backStack = rememberNavBackStack(startRoute)
     val homeViewModel: HomeViewModel = viewModel()
     val runViewModel: RunViewModel = viewModel()
     val guardiansViewModel: GuardiansViewModel = viewModel()
@@ -59,7 +61,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val receivedAlertViewModel: ReceivedAlertViewModel = viewModel()
     val historyViewModel: HistoryViewModel = viewModel()
     LaunchedEffect(Unit) {
-        if (MockAuthRepository.currentUser == null && backStack.lastOrNull() != AuthRoute) {
+        if (FirebaseAuthRepository.currentUser == null && backStack.lastOrNull() != AuthRoute) {
             backStack.clear()
             backStack.add(AuthRoute)
         } else if (MockRunRepository.activeRun.value == null &&
