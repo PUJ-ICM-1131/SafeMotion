@@ -12,6 +12,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -21,6 +23,7 @@ import com.example.safemotion.data.repository.MockGuardianTrackingRepository
 import com.example.safemotion.data.repository.MockRunRepository
 import com.example.safemotion.data.repository.LocationRepository
 import com.example.safemotion.data.repository.EvidencePhotoStorage
+import com.example.safemotion.data.sensor.AndroidRunSensorMonitor
 import com.example.safemotion.ui.components.MainDestination
 import com.example.safemotion.ui.components.MainNavigationBar
 import com.example.safemotion.ui.screens.auth.AuthScreen
@@ -42,10 +45,13 @@ import com.example.safemotion.ui.screens.run.ActiveRunScreen
 import com.example.safemotion.ui.screens.run.IncidentAlertScreen
 import com.example.safemotion.ui.screens.run.PrepareRunScreen
 import com.example.safemotion.ui.screens.run.RunViewModel
+import com.example.safemotion.ui.screens.run.RunPhase
 import com.example.safemotion.ui.screens.reportrisk.ReportRiskScreen
 import com.example.safemotion.ui.screens.reportrisk.ReportRiskViewModel
 import com.example.safemotion.ui.screens.riskmap.RiskMapScreen
 import com.example.safemotion.ui.screens.riskmap.RiskMapViewModel
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -56,7 +62,11 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val startRoute = remember { if (authViewModel.restoreSession()) HomeRoute else AuthRoute }
     val backStack = rememberNavBackStack(startRoute)
     val homeViewModel: HomeViewModel = viewModel()
-    val runViewModel: RunViewModel = viewModel()
+    val runViewModel: RunViewModel = viewModel(
+        factory = viewModelFactory {
+            initializer { RunViewModel(AndroidRunSensorMonitor(context.applicationContext)) }
+        }
+    )
     val guardiansViewModel: GuardiansViewModel = viewModel()
     val invitationsViewModel: InvitationsViewModel = viewModel()
     val riskMapViewModel: RiskMapViewModel = viewModel()
@@ -74,6 +84,13 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         ) {
             backStack.clear()
             backStack.add(HomeRoute)
+        }
+    }
+    LaunchedEffect(runViewModel) {
+        runViewModel.uiState.map { it.phase }.distinctUntilChanged().collect { phase ->
+            if (phase == RunPhase.ALERT && backStack.lastOrNull() == ActiveRunRoute) {
+                backStack.add(IncidentAlertRoute)
+            }
         }
     }
     val selectedDestination = when (backStack.lastOrNull()) {
@@ -176,11 +193,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     val uiState by runViewModel.uiState.collectAsStateWithLifecycle()
                     ActiveRunScreen(
                         uiState = uiState,
-                        onSimulateIncident = { type ->
-                            if (runViewModel.simulateIncident(type)) {
-                                backStack.add(IncidentAlertRoute)
-                            }
-                        },
+                        onSimulateIncident = { type -> runViewModel.simulateIncident(type) },
                         onFinishRun = {
                             if (runViewModel.finishRun()) {
                                 backStack.clear()

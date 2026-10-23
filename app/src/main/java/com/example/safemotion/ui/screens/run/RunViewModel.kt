@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.safemotion.data.model.IncidentType
 import com.example.safemotion.data.model.RunActivityType
 import com.example.safemotion.data.repository.MockRunRepository
+import com.example.safemotion.data.sensor.RunSensorMonitor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,17 +13,31 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class RunViewModel : ViewModel() {
+class RunViewModel(
+    private val sensorMonitor: RunSensorMonitor
+) : ViewModel() {
     private val _uiState = MutableStateFlow(
         RunUiState(
             guardians = MockRunRepository.availableGuardians,
-            session = MockRunRepository.activeRun.value
+            session = MockRunRepository.activeRun.value,
+            sensorStatus = sensorMonitor.status.value
         )
     )
     val uiState = _uiState.asStateFlow()
 
     private var runClock: Job? = null
     private var alertClock: Job? = null
+
+    init {
+        viewModelScope.launch {
+            sensorMonitor.status.collect { status ->
+                _uiState.update { it.copy(sensorStatus = status) }
+            }
+        }
+        viewModelScope.launch {
+            sensorMonitor.incidents.collect { type -> simulateIncident(type) }
+        }
+    }
 
     fun selectActivity(activity: RunActivityType) {
         if (_uiState.value.phase == RunPhase.PREPARING) {
@@ -53,6 +68,7 @@ class RunViewModel : ViewModel() {
         val session = MockRunRepository.startRun(state.activity, state.selectedGuardianIds)
             ?: return false
         _uiState.update { it.copy(phase = RunPhase.ACTIVE, session = session, needsGuardian = false) }
+        sensorMonitor.start()
         runClock?.cancel()
         runClock = viewModelScope.launch {
             while (true) {
@@ -66,6 +82,7 @@ class RunViewModel : ViewModel() {
 
     fun simulateIncident(type: IncidentType): Boolean {
         if (_uiState.value.phase != RunPhase.ACTIVE || _uiState.value.session == null) return false
+        sensorMonitor.stop()
         alertClock?.cancel()
         _uiState.update {
             it.copy(
@@ -95,6 +112,7 @@ class RunViewModel : ViewModel() {
         _uiState.update {
             it.copy(phase = RunPhase.ACTIVE, incidentType = null, secondsToCancel = 30)
         }
+        sensorMonitor.start()
         return true
     }
 
@@ -103,6 +121,7 @@ class RunViewModel : ViewModel() {
         _uiState.update {
             it.copy(phase = RunPhase.ACTIVE, incidentType = null, secondsToCancel = 30, alertSent = false)
         }
+        sensorMonitor.start()
         return true
     }
 
@@ -110,6 +129,7 @@ class RunViewModel : ViewModel() {
         if (_uiState.value.phase != RunPhase.ACTIVE) return false
         runClock?.cancel()
         alertClock?.cancel()
+        sensorMonitor.stop()
         MockRunRepository.finishRun() ?: return false
         _uiState.update {
             it.copy(
@@ -122,5 +142,9 @@ class RunViewModel : ViewModel() {
             )
         }
         return true
+    }
+
+    override fun onCleared() {
+        sensorMonitor.stop()
     }
 }
