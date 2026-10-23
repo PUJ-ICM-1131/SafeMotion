@@ -1,18 +1,22 @@
 package com.example.safemotion.ui.screens.auth
 
 import androidx.lifecycle.ViewModel
-import com.example.safemotion.data.model.MockUser
+import androidx.lifecycle.viewModelScope
+import com.example.safemotion.data.repository.AuthFailure
 import com.example.safemotion.data.repository.AuthRepository
-import com.example.safemotion.data.repository.MockAuthRepository
+import com.example.safemotion.data.repository.FirebaseAuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val repository: AuthRepository = MockAuthRepository
+    private val repository: AuthRepository = FirebaseAuthRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState = _uiState.asStateFlow()
+
+    fun restoreSession(): Boolean = repository.restoreSession()
 
     fun changeMode(mode: AuthMode) {
         _uiState.update { it.copy(mode = mode, message = null, password = "") }
@@ -41,35 +45,55 @@ class AuthViewModel(
 
     fun submit() {
         val state = _uiState.value
+        if (state.isLoading) return
         val email = state.email.trim()
-        val message = when (state.mode) {
+        val validationMessage = when (state.mode) {
             AuthMode.SignIn -> when {
                 email.isEmpty() || state.password.isEmpty() -> AuthMessage.MissingFields
                 !email.contains("@") -> AuthMessage.InvalidEmail
-                repository.signIn(email, state.password) -> null
-                else -> AuthMessage.InvalidCredentials
+                else -> null
             }
             AuthMode.Register -> when {
                 state.name.isBlank() || state.phone.isBlank() ||
                     email.isEmpty() || state.password.isEmpty() -> AuthMessage.MissingFields
                 !email.contains("@") -> AuthMessage.InvalidEmail
                 state.password.length < 8 -> AuthMessage.ShortPassword
-                repository.register(
-                    MockUser(state.name.trim(), state.phone.trim(), email, state.password)
-                ) -> null
-                else -> AuthMessage.ExistingEmail
+                else -> null
             }
             AuthMode.Recover -> when {
                 email.isEmpty() -> AuthMessage.MissingFields
                 !email.contains("@") -> AuthMessage.InvalidEmail
-                else -> AuthMessage.RecoverySent
+                else -> null
             }
         }
-        _uiState.update {
-            it.copy(
-                message = message,
-                isAuthenticated = message == null && state.mode != AuthMode.Recover
-            )
+        if (validationMessage != null) {
+            _uiState.update { it.copy(message = validationMessage) }
+            return
         }
+
+        _uiState.update { it.copy(isLoading = true, message = null) }
+        viewModelScope.launch {
+            val failure = when (state.mode) {
+                AuthMode.SignIn -> repository.signIn(email, state.password)
+                AuthMode.Register -> repository.register(state.name.trim(), email, state.password)
+                AuthMode.Recover -> repository.sendPasswordReset(email)
+            }
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    message = failure?.toMessage()
+                        ?: if (state.mode == AuthMode.Recover) AuthMessage.RecoverySent else null,
+                    isAuthenticated = failure == null && state.mode != AuthMode.Recover
+                )
+            }
+        }
+    }
+
+    private fun AuthFailure.toMessage() = when (this) {
+        AuthFailure.InvalidCredentials -> AuthMessage.InvalidCredentials
+        AuthFailure.ExistingEmail -> AuthMessage.ExistingEmail
+        AuthFailure.WeakPassword -> AuthMessage.ShortPassword
+        AuthFailure.Network -> AuthMessage.NetworkError
+        AuthFailure.Unknown -> AuthMessage.UnknownError
     }
 }

@@ -8,6 +8,8 @@ enum class AuthMessage {
     ShortPassword,
     InvalidCredentials,
     ExistingEmail,
+    NetworkError,
+    UnknownError,
     RecoverySent
 }
 
@@ -18,5 +20,6 @@ data class AuthUiState(
     val email: String = "",
     val password: String = "",
     val message: AuthMessage? = null,
+    val isLoading: Boolean = false,
     val isAuthenticated: Boolean = false
 )
