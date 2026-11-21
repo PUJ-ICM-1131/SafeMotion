@@ -57,6 +57,8 @@ import com.example.safemotion.ui.screens.routeplanner.RoutePlannerScreen
 import com.example.safemotion.ui.screens.routeplanner.RoutePlannerViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import com.example.safemotion.data.repository.FirestoreGuardianRepository
+import com.example.safemotion.data.repository.FirestoreRunTrackingRepository
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -70,7 +72,14 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val homeViewModel: HomeViewModel = viewModel()
     val runViewModel: RunViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { RunViewModel(AndroidRunSensorMonitor(context.applicationContext)) }
+            initializer {
+                RunViewModel(
+                    sensorMonitor = AndroidRunSensorMonitor(context.applicationContext),
+                    guardianRepository = FirestoreGuardianRepository,
+                    trackingRepository = FirestoreRunTrackingRepository,
+                    positionTracker = locationRepository
+                )
+            }
         }
     )
     val guardiansViewModel: GuardiansViewModel = viewModel()
@@ -107,6 +116,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         runViewModel.uiState.map { it.phase }.distinctUntilChanged().collect { phase ->
             if (phase == RunPhase.ALERT && backStack.lastOrNull() == ActiveRunRoute) {
                 backStack.add(IncidentAlertRoute)
+            }
+            if (phase == RunPhase.ACTIVE && backStack.lastOrNull() == PrepareRunRoute) {
+                backStack.add(ActiveRunRoute)
             }
         }
     }
@@ -195,11 +207,14 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     )
                 }
                 PrepareRunRoute -> NavEntry(key) {
+                    // Los guardianes se cargan al entrar, cuando ya hay un usuario autenticado.
+                    LaunchedEffect(Unit) { runViewModel.loadGuardians() }
                     val uiState by runViewModel.uiState.collectAsStateWithLifecycle()
                     PrepareRunScreen(
                         uiState = uiState,
                         onActivitySelected = runViewModel::selectActivity,
                         onGuardianSelected = runViewModel::toggleGuardian,
+                        onInviteGuardians = { backStack.add(GuardiansRoute) },
                         onPlanRoute = {
                             val profile = when (uiState.activity) {
                                 com.example.safemotion.data.model.RunActivityType.RUNNING -> {
@@ -211,9 +226,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                             }
                             backStack.add(RoutePlannerRoute(profile))
                         },
-                        onStartRun = {
-                            if (runViewModel.startRun()) backStack.add(ActiveRunRoute)
-                        },
+                        onStartRun = runViewModel::startRun,
+                        onLocationDenied = runViewModel::onLocationDenied,
                         onBack = { backStack.removeLastOrNull() }
                     )
                 }

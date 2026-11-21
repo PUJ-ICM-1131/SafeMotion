@@ -1,15 +1,26 @@
 package com.example.safemotion.ui.screens.run
 
+import com.example.safemotion.data.model.Contact
+import com.example.safemotion.data.model.Guardian
 import com.example.safemotion.data.model.IncidentType
+import com.example.safemotion.data.model.InvitationStatus
+import com.example.safemotion.data.model.InviteResult
+import com.example.safemotion.data.model.MapPoint
+import com.example.safemotion.data.model.ReceivedInvitation
 import com.example.safemotion.data.model.RunActivityType
+import com.example.safemotion.data.repository.GuardianRepository
 import com.example.safemotion.data.repository.MockRunRepository
+import com.example.safemotion.data.repository.PositionTracker
+import com.example.safemotion.data.repository.RunTrackingRepository
 import com.example.safemotion.data.sensor.RunSensorMonitor
 import com.example.safemotion.data.sensor.SensorStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -18,6 +29,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -36,33 +48,116 @@ class RunViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private val guardians = FakeGuardianRepository()
+    private val tracking = FakeRunTrackingRepository()
+    private val gps = FakePositionTracker()
+
+    // Crea el ViewModel y espera a que lleguen los guardianes del repositorio falso.
+    private fun TestScope.newViewModel(
+        monitor: FakeSensorMonitor = FakeSensorMonitor()
+    ): RunViewModel {
+        val viewModel = RunViewModel(monitor, guardians, tracking, gps)
+        viewModel.loadGuardians()
+        runCurrent()
+        return viewModel
+    }
+
+    @Test
+    fun onlyAcceptedGuardiansCanBeSelected() = runTest {
+        val viewModel = newViewModel()
+
+        assertEquals(listOf("uid-laura"), viewModel.uiState.value.guardians.map { it.id })
+        viewModel.toggleGuardian("uid-andres")
+        assertTrue(viewModel.uiState.value.selectedGuardianIds.isEmpty())
+
+        viewModel.toggleGuardian("uid-laura")
+        assertEquals(setOf("uid-laura"), viewModel.uiState.value.selectedGuardianIds)
+
+        // Si deja de estar aceptado, sale de la lista y de la selección.
+        guardians.guardians.value = emptyList()
+        runCurrent()
+        assertTrue(viewModel.uiState.value.guardiansLoaded)
+        assertTrue(viewModel.uiState.value.guardians.isEmpty())
+        assertTrue(viewModel.uiState.value.selectedGuardianIds.isEmpty())
+    }
+
     @Test
     fun guardianIsRequiredAndRunCanBeFinished() = runTest {
-        val viewModel = RunViewModel(FakeSensorMonitor())
-        assertFalse(viewModel.startRun())
+        val viewModel = newViewModel()
+        viewModel.startRun()
         assertTrue(viewModel.uiState.value.needsGuardian)
 
-        viewModel.toggleGuardian(999)
+        viewModel.toggleGuardian("uid-desconocido")
         assertTrue(viewModel.uiState.value.selectedGuardianIds.isEmpty())
-        viewModel.toggleGuardian(1)
+        viewModel.toggleGuardian("uid-laura")
         viewModel.selectActivity(RunActivityType.CYCLING)
-        assertTrue(viewModel.startRun())
-        assertFalse(viewModel.startRun())
+        viewModel.startRun()
+        viewModel.startRun()
         runCurrent()
+
+        // Se crea una sola sesión en Firestore y su id queda en el estado.
+        assertEquals(listOf(RunActivityType.CYCLING to setOf("uid-laura")), tracking.started)
+        assertEquals("session-1", viewModel.uiState.value.sessionId)
+        assertEquals(RunPhase.ACTIVE, viewModel.uiState.value.phase)
+
         advanceTimeBy(2_000)
         runCurrent()
 
         assertEquals(2, viewModel.uiState.value.session?.elapsedSeconds)
         assertTrue(viewModel.finishRun())
+        assertEquals(listOf("session-1"), tracking.finished)
         assertEquals(RunPhase.PREPARING, viewModel.uiState.value.phase)
+        assertNull(viewModel.uiState.value.sessionId)
         assertEquals(1, MockRunRepository.completedRuns.value.size)
     }
 
     @Test
+    fun eachPositionIsPublishedAndOnlyRealMovementAddsDistance() = runTest {
+        val viewModel = newViewModel()
+        viewModel.toggleGuardian("uid-laura")
+        viewModel.startRun()
+        runCurrent()
+        assertEquals(1, gps.positions.subscriptionCount.value)
+
+        val start = MapPoint(4.6000, -74.0800)
+        gps.positions.emit(start)
+        gps.positions.emit(MapPoint(4.60001, -74.0800)) // 1 m: ruido del GPS
+        gps.positions.emit(MapPoint(4.6005, -74.0800)) // 50 m desde el inicio
+        runCurrent()
+
+        assertEquals(3, tracking.published.size)
+        assertEquals(listOf(true, false, true), tracking.published.map { it.addToRoute })
+        assertEquals(0.05, tracking.published.last().distanceKm, 0.0001)
+        assertEquals(0.05, viewModel.uiState.value.session?.distanceKm ?: 0.0, 0.0001)
+        assertEquals(MapPoint(4.6005, -74.0800), viewModel.uiState.value.currentLocation)
+
+        // Al terminar, el GPS deja de escucharse y la sesión queda finalizada.
+        assertTrue(viewModel.finishRun())
+        runCurrent()
+        assertEquals(0, gps.positions.subscriptionCount.value)
+        assertEquals(listOf("session-1"), tracking.finished)
+    }
+
+    @Test
+    fun runDoesNotStartWhenTheSessionCannotBeCreated() = runTest {
+        val viewModel = newViewModel()
+        viewModel.toggleGuardian("uid-laura")
+        tracking.failOnStart = true
+
+        viewModel.startRun()
+        runCurrent()
+
+        assertEquals(RunPhase.PREPARING, viewModel.uiState.value.phase)
+        assertTrue(viewModel.uiState.value.startFailed)
+        assertFalse(viewModel.uiState.value.isStarting)
+        assertNull(MockRunRepository.activeRun.value)
+    }
+
+    @Test
     fun cancellingAlertDoesNotNotifyGuardians() = runTest {
-        val viewModel = RunViewModel(FakeSensorMonitor())
-        viewModel.toggleGuardian(1)
-        assertTrue(viewModel.startRun())
+        val viewModel = newViewModel()
+        viewModel.toggleGuardian("uid-laura")
+        viewModel.startRun()
         runCurrent()
         assertTrue(viewModel.simulateIncident(IncidentType.FALL))
         runCurrent()
@@ -81,9 +176,9 @@ class RunViewModelTest {
 
     @Test
     fun alertIsConfirmedAfterThirtySecondsAndCannotBeCancelled() = runTest {
-        val viewModel = RunViewModel(FakeSensorMonitor())
-        viewModel.toggleGuardian(1)
-        assertTrue(viewModel.startRun())
+        val viewModel = newViewModel()
+        viewModel.toggleGuardian("uid-laura")
+        viewModel.startRun()
         runCurrent()
         assertTrue(viewModel.simulateIncident(IncidentType.INACTIVITY))
         runCurrent()
@@ -102,9 +197,9 @@ class RunViewModelTest {
     @Test
     fun sensorIncidentOpensAlertAndMonitoringResumesAfterCancellation() = runTest {
         val monitor = FakeSensorMonitor()
-        val viewModel = RunViewModel(monitor)
-        viewModel.toggleGuardian(1)
-        assertTrue(viewModel.startRun())
+        val viewModel = newViewModel(monitor)
+        viewModel.toggleGuardian("uid-laura")
+        viewModel.startRun()
         runCurrent()
         assertTrue(monitor.status.value.monitoring)
 
@@ -118,6 +213,60 @@ class RunViewModelTest {
         assertTrue(monitor.status.value.monitoring)
         assertTrue(viewModel.finishRun())
         assertFalse(monitor.status.value.monitoring)
+    }
+
+    private class FakeGuardianRepository : GuardianRepository {
+        val guardians = MutableStateFlow(
+            listOf(
+                Guardian("inv-1", "Laura Gómez", "320", InvitationStatus.ACCEPTED, uid = "uid-laura"),
+                Guardian("inv-2", "Andrés Rojas", "310", InvitationStatus.PENDING, uid = "uid-andres")
+            )
+        )
+
+        override fun guardians(): Flow<List<Guardian>> = guardians
+        override fun receivedInvitations(): Flow<List<ReceivedInvitation>> = MutableStateFlow(emptyList())
+        override suspend fun invite(contacts: List<Contact>) = InviteResult(0, 0, emptyList())
+        override suspend fun respond(invitationId: String, accepted: Boolean) = Unit
+        override suspend fun undoResponse(invitationId: String) = Unit
+    }
+
+    private data class Published(val point: MapPoint, val distanceKm: Double, val addToRoute: Boolean)
+
+    private class FakeRunTrackingRepository : RunTrackingRepository {
+        val started = mutableListOf<Pair<RunActivityType, Set<String>>>()
+        val published = mutableListOf<Published>()
+        val finished = mutableListOf<String>()
+        var failOnStart = false
+
+        override suspend fun startSession(activity: RunActivityType, guardianUids: Set<String>): String {
+            if (failOnStart) throw IllegalStateException("Sin red")
+            started += activity to guardianUids
+            return "session-${started.size}"
+        }
+
+        override fun publishPosition(
+            sessionId: String,
+            point: MapPoint,
+            distanceKm: Double,
+            elapsedSeconds: Long,
+            addToRoute: Boolean
+        ) {
+            published += Published(point, distanceKm, addToRoute)
+        }
+
+        override fun finishSession(sessionId: String, distanceKm: Double, elapsedSeconds: Long) {
+            finished += sessionId
+        }
+    }
+
+    // GPS falso: 0.00001° de latitud equivale a 1 m para que las cuentas sean fáciles.
+    private class FakePositionTracker : PositionTracker {
+        val positions = MutableSharedFlow<MapPoint>(extraBufferCapacity = 10)
+
+        override fun positions(): Flow<MapPoint> = positions
+
+        override fun distanceMeters(from: MapPoint, to: MapPoint): Float =
+            (kotlin.math.abs(to.latitude - from.latitude) * 100_000).toFloat()
     }
 
     private class FakeSensorMonitor : RunSensorMonitor {

@@ -4,11 +4,11 @@ enum class RunActivityType { RUNNING, CYCLING }
 
 enum class IncidentType { FALL, INACTIVITY }
 
-data class RunGuardian(val id: Int, val name: String)
+data class RunGuardian(val id: String, val name: String)
 
 data class RunSession(
     val activity: RunActivityType,
-    val guardianIds: Set<Int>,
+    val guardianIds: Set<String>,
     val elapsedSeconds: Int = 0,
     val distanceKm: Double = 0.0
 )

@@ -136,7 +136,8 @@ object FirestoreGuardianRepository : GuardianRepository {
         phone = getString("toPhone").orEmpty(),
         status = getString("status")
             ?.let { runCatching { InvitationStatus.valueOf(it) }.getOrNull() }
-            ?: InvitationStatus.PENDING
+            ?: InvitationStatus.PENDING,
+            uid = getString("toUid").orEmpty()
     )
 
     private fun DocumentSnapshot.toReceivedInvitation() = ReceivedInvitation(

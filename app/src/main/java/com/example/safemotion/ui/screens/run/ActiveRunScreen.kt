@@ -77,7 +77,15 @@ fun ActiveRunScreen(
                         Text(stringResource(R.string.run_distance, session.distanceKm))
                     }
                     Text(stringResource(R.string.run_guardians_connected, session.guardianIds.size))
-                    Text(stringResource(R.string.run_gps_mock))
+                    Text(
+                        stringResource(
+                            if (uiState.currentLocation != null) {
+                                R.string.run_gps_active
+                            } else {
+                                R.string.run_gps_searching
+                            }
+                        )
+                    )
                     Text(
                         stringResource(
                             if (uiState.sensorStatus.monitoring) {
