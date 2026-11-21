@@ -4,16 +4,11 @@ import com.example.safemotion.data.model.CompletedRun
 import com.example.safemotion.data.model.ConfirmedIncident
 import com.example.safemotion.data.model.IncidentType
 import com.example.safemotion.data.model.RunActivityType
-import com.example.safemotion.data.model.RunGuardian
 import com.example.safemotion.data.model.RunSession
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 object MockRunRepository {
-    val availableGuardians = listOf(
-        RunGuardian(1, "Andrés Rojas"),
-        RunGuardian(2, "Laura Gómez")
-    )
 
     private val _activeRun = MutableStateFlow<RunSession?>(null)
     val activeRun = _activeRun.asStateFlow()
@@ -24,13 +19,11 @@ object MockRunRepository {
     private val _confirmedIncidents = MutableStateFlow<List<ConfirmedIncident>>(emptyList())
     val confirmedIncidents = _confirmedIncidents.asStateFlow()
 
-    fun startRun(activity: RunActivityType, guardianIds: Set<Int>): RunSession? {
+    // Los guardianes ya vienen validados desde Firestore (invitaciones aceptadas).
+    fun startRun(activity: RunActivityType, guardianIds: Set<String>): RunSession? {
         if (_activeRun.value != null || guardianIds.isEmpty()) return null
-        val validIds = availableGuardians.map { it.id }.toSet()
-        if (!validIds.containsAll(guardianIds)) return null
         return RunSession(activity, guardianIds).also { _activeRun.value = it }
     }
-
     fun advanceOneSecond(): RunSession? {
         val current = _activeRun.value ?: return null
         val distancePerSecond = if (current.activity == RunActivityType.RUNNING) 0.003 else 0.006

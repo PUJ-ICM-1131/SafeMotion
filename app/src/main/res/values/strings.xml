@@ -40,7 +40,8 @@
     <string name="activity_cycling">Ciclismo</string>
     <string name="select_guardians">Selecciona tus guardianes</string>
     <string name="guardian_required">Selecciona al menos un guardián para iniciar.</string>
-    <string name="run_mock_notice">El tiempo, la distancia, el GPS del recorrido y los avisos a guardianes siguen simulados. La detección de incidentes usa los sensores del teléfono; la planeación de ruta usa GPS real.</string>
+    <string name="run_no_accepted_guardians">Invita a un guardián y espera a que acepte antes de salir.</string>
+    <string name="run_invite_guardians">Invitar guardianes</string>
     <string name="start_run">Iniciar recorrido</string>
     <string name="plan_route">Planear ruta</string>
     <string name="active_run_title">Recorrido activo</string>

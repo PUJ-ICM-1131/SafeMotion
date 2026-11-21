@@ -25,7 +25,7 @@ class HistoryViewModelTest {
 
     @Test
     fun refreshIncludesRunCompletedInCurrentProcess() {
-        MockRunRepository.startRun(RunActivityType.CYCLING, setOf(1))
+        MockRunRepository.startRun(RunActivityType.CYCLING, setOf("g1"))
         repeat(12) { MockRunRepository.advanceOneSecond() }
         MockRunRepository.finishRun()
         val viewModel = HistoryViewModel(includeSamples = false)

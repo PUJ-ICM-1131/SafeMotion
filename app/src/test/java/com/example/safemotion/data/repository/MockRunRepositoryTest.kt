@@ -17,17 +17,16 @@ class MockRunRepositoryTest {
     fun tearDown() = MockRunRepository.clearForSignOut()
 
     @Test
-    fun startRequiresAnAvailableGuardian() {
+    fun startRequiresAGuardian() {
         assertNull(MockRunRepository.startRun(RunActivityType.RUNNING, emptySet()))
-        assertNull(MockRunRepository.startRun(RunActivityType.RUNNING, setOf(999)))
         assertNull(MockRunRepository.activeRun.value)
     }
 
     @Test
     fun finishedRunIsSavedOnlyOnce() {
-        val started = MockRunRepository.startRun(RunActivityType.CYCLING, setOf(1, 2))
+        val started = MockRunRepository.startRun(RunActivityType.CYCLING, setOf("g1", "g2"))
         assertEquals(2, started?.guardianIds?.size)
-        assertNull(MockRunRepository.startRun(RunActivityType.RUNNING, setOf(1)))
+        assertNull(MockRunRepository.startRun(RunActivityType.RUNNING, setOf("g1")))
 
         repeat(10) { MockRunRepository.advanceOneSecond() }
         val finished = MockRunRepository.finishRun()
@@ -45,7 +44,7 @@ class MockRunRepositoryTest {
         MockRunRepository.confirmIncident(IncidentType.FALL)
         assertTrue(MockRunRepository.confirmedIncidents.value.isEmpty())
 
-        MockRunRepository.startRun(RunActivityType.RUNNING, setOf(1))
+        MockRunRepository.startRun(RunActivityType.RUNNING, setOf("g1"))
         MockRunRepository.confirmIncident(IncidentType.FALL)
         assertEquals(IncidentType.FALL, MockRunRepository.confirmedIncidents.value.single().type)
         MockRunRepository.finishRun()

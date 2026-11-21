@@ -12,13 +12,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.example.safemotion.data.model.InvitationStatus
+import com.example.safemotion.data.model.RunGuardian
+import com.example.safemotion.data.repository.GuardianRepository
+import kotlinx.coroutines.flow.catch
 
 class RunViewModel(
-    private val sensorMonitor: RunSensorMonitor
+    private val sensorMonitor: RunSensorMonitor,
+    private val guardianRepository: GuardianRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         RunUiState(
-            guardians = MockRunRepository.availableGuardians,
             session = MockRunRepository.activeRun.value,
             sensorStatus = sensorMonitor.status.value
         )
@@ -26,6 +30,7 @@ class RunViewModel(
     val uiState = _uiState.asStateFlow()
 
     private var runClock: Job? = null
+    private var guardiansJob: Job? = null
     private var alertClock: Job? = null
 
     init {
@@ -39,13 +44,40 @@ class RunViewModel(
         }
     }
 
+    // Escucha en tiempo real las invitaciones del usuario y deja solo los guardianes que aceptaron.
+    fun loadGuardians() {
+        guardiansJob?.cancel()
+        guardiansJob = viewModelScope.launch {
+            guardianRepository.guardians()
+                .catch { emit(emptyList()) }
+                .collect { all ->
+                    val accepted = all
+                        .filter { it.status == InvitationStatus.ACCEPTED && it.uid.isNotBlank() }
+                        .map { RunGuardian(id = it.uid, name = it.name) }
+                    val acceptedIds = accepted.map { it.id }.toSet()
+                    _uiState.update { state ->
+                        state.copy(
+                            guardians = accepted,
+                            guardiansLoaded = true,
+                            // Si un guardián deja de estar aceptado, se quita de la selección.
+                            selectedGuardianIds = if (state.phase == RunPhase.PREPARING) {
+                                state.selectedGuardianIds intersect acceptedIds
+                            } else {
+                                state.selectedGuardianIds
+                            }
+                        )
+                    }
+                }
+        }
+    }
+
     fun selectActivity(activity: RunActivityType) {
         if (_uiState.value.phase == RunPhase.PREPARING) {
             _uiState.update { it.copy(activity = activity) }
         }
     }
 
-    fun toggleGuardian(id: Int) {
+    fun toggleGuardian(id: String) {
         if (_uiState.value.phase != RunPhase.PREPARING) return
         if (_uiState.value.guardians.none { it.id == id }) return
         _uiState.update { state ->

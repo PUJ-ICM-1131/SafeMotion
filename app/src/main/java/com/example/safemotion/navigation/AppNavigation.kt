@@ -57,6 +57,7 @@ import com.example.safemotion.ui.screens.routeplanner.RoutePlannerScreen
 import com.example.safemotion.ui.screens.routeplanner.RoutePlannerViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import com.example.safemotion.data.repository.FirestoreGuardianRepository
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -70,7 +71,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val homeViewModel: HomeViewModel = viewModel()
     val runViewModel: RunViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { RunViewModel(AndroidRunSensorMonitor(context.applicationContext)) }
+            initializer {
+                RunViewModel(
+                    sensorMonitor = AndroidRunSensorMonitor(context.applicationContext),
+                    guardianRepository = FirestoreGuardianRepository
+                )
+            }
         }
     )
     val guardiansViewModel: GuardiansViewModel = viewModel()
@@ -195,11 +201,14 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     )
                 }
                 PrepareRunRoute -> NavEntry(key) {
+                    // Los guardianes se cargan al entrar, cuando ya hay un usuario autenticado.
+                    LaunchedEffect(Unit) { runViewModel.loadGuardians() }
                     val uiState by runViewModel.uiState.collectAsStateWithLifecycle()
                     PrepareRunScreen(
                         uiState = uiState,
                         onActivitySelected = runViewModel::selectActivity,
                         onGuardianSelected = runViewModel::toggleGuardian,
+                        onInviteGuardians = { backStack.add(GuardiansRoute) },
                         onPlanRoute = {
                             val profile = when (uiState.activity) {
                                 com.example.safemotion.data.model.RunActivityType.RUNNING -> {

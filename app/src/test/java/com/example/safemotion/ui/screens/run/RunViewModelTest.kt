@@ -1,15 +1,23 @@
 package com.example.safemotion.ui.screens.run
 
+import com.example.safemotion.data.model.Contact
+import com.example.safemotion.data.model.Guardian
 import com.example.safemotion.data.model.IncidentType
+import com.example.safemotion.data.model.InvitationStatus
+import com.example.safemotion.data.model.InviteResult
+import com.example.safemotion.data.model.ReceivedInvitation
 import com.example.safemotion.data.model.RunActivityType
+import com.example.safemotion.data.repository.GuardianRepository
 import com.example.safemotion.data.repository.MockRunRepository
 import com.example.safemotion.data.sensor.RunSensorMonitor
 import com.example.safemotion.data.sensor.SensorStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -36,15 +44,46 @@ class RunViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private val guardians = FakeGuardianRepository()
+
+    // Crea el ViewModel y espera a que lleguen los guardianes del repositorio falso.
+    private fun TestScope.newViewModel(
+        monitor: FakeSensorMonitor = FakeSensorMonitor()
+    ): RunViewModel {
+        val viewModel = RunViewModel(monitor, guardians)
+        viewModel.loadGuardians()
+        runCurrent()
+        return viewModel
+    }
+
+    @Test
+    fun onlyAcceptedGuardiansCanBeSelected() = runTest {
+        val viewModel = newViewModel()
+
+        assertEquals(listOf("uid-laura"), viewModel.uiState.value.guardians.map { it.id })
+        viewModel.toggleGuardian("uid-andres")
+        assertTrue(viewModel.uiState.value.selectedGuardianIds.isEmpty())
+
+        viewModel.toggleGuardian("uid-laura")
+        assertEquals(setOf("uid-laura"), viewModel.uiState.value.selectedGuardianIds)
+
+        // Si deja de estar aceptado, sale de la lista y de la selección.
+        guardians.guardians.value = emptyList()
+        runCurrent()
+        assertTrue(viewModel.uiState.value.guardiansLoaded)
+        assertTrue(viewModel.uiState.value.guardians.isEmpty())
+        assertTrue(viewModel.uiState.value.selectedGuardianIds.isEmpty())
+    }
+
     @Test
     fun guardianIsRequiredAndRunCanBeFinished() = runTest {
-        val viewModel = RunViewModel(FakeSensorMonitor())
+        val viewModel = newViewModel()
         assertFalse(viewModel.startRun())
         assertTrue(viewModel.uiState.value.needsGuardian)
 
-        viewModel.toggleGuardian(999)
+        viewModel.toggleGuardian("uid-desconocido")
         assertTrue(viewModel.uiState.value.selectedGuardianIds.isEmpty())
-        viewModel.toggleGuardian(1)
+        viewModel.toggleGuardian("uid-laura")
         viewModel.selectActivity(RunActivityType.CYCLING)
         assertTrue(viewModel.startRun())
         assertFalse(viewModel.startRun())
@@ -60,8 +99,8 @@ class RunViewModelTest {
 
     @Test
     fun cancellingAlertDoesNotNotifyGuardians() = runTest {
-        val viewModel = RunViewModel(FakeSensorMonitor())
-        viewModel.toggleGuardian(1)
+        val viewModel = newViewModel()
+        viewModel.toggleGuardian("uid-laura")
         assertTrue(viewModel.startRun())
         runCurrent()
         assertTrue(viewModel.simulateIncident(IncidentType.FALL))
@@ -81,8 +120,8 @@ class RunViewModelTest {
 
     @Test
     fun alertIsConfirmedAfterThirtySecondsAndCannotBeCancelled() = runTest {
-        val viewModel = RunViewModel(FakeSensorMonitor())
-        viewModel.toggleGuardian(1)
+        val viewModel = newViewModel()
+        viewModel.toggleGuardian("uid-laura")
         assertTrue(viewModel.startRun())
         runCurrent()
         assertTrue(viewModel.simulateIncident(IncidentType.INACTIVITY))
@@ -102,8 +141,8 @@ class RunViewModelTest {
     @Test
     fun sensorIncidentOpensAlertAndMonitoringResumesAfterCancellation() = runTest {
         val monitor = FakeSensorMonitor()
-        val viewModel = RunViewModel(monitor)
-        viewModel.toggleGuardian(1)
+        val viewModel = newViewModel(monitor)
+        viewModel.toggleGuardian("uid-laura")
         assertTrue(viewModel.startRun())
         runCurrent()
         assertTrue(monitor.status.value.monitoring)
@@ -118,6 +157,21 @@ class RunViewModelTest {
         assertTrue(monitor.status.value.monitoring)
         assertTrue(viewModel.finishRun())
         assertFalse(monitor.status.value.monitoring)
+    }
+
+    private class FakeGuardianRepository : GuardianRepository {
+        val guardians = MutableStateFlow(
+            listOf(
+                Guardian("inv-1", "Laura Gómez", "320", InvitationStatus.ACCEPTED, uid = "uid-laura"),
+                Guardian("inv-2", "Andrés Rojas", "310", InvitationStatus.PENDING, uid = "uid-andres")
+            )
+        )
+
+        override fun guardians(): Flow<List<Guardian>> = guardians
+        override fun receivedInvitations(): Flow<List<ReceivedInvitation>> = MutableStateFlow(emptyList())
+        override suspend fun invite(contacts: List<Contact>) = InviteResult(0, 0, emptyList())
+        override suspend fun respond(invitationId: String, accepted: Boolean) = Unit
+        override suspend fun undoResponse(invitationId: String) = Unit
     }
 
     private class FakeSensorMonitor : RunSensorMonitor {

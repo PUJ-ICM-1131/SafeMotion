@@ -13,7 +13,8 @@ data class Guardian(
     val id: String,
     val name: String,
     val phone: String,
-    val status: InvitationStatus
+    val status: InvitationStatus,
+    val uid: String = ""
 )
 
 data class ReceivedInvitation(

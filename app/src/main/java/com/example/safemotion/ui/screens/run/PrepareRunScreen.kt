@@ -30,7 +30,8 @@ fun PrepareRunScreen(
     modifier: Modifier = Modifier,
     uiState: RunUiState,
     onActivitySelected: (RunActivityType) -> Unit,
-    onGuardianSelected: (Int) -> Unit,
+    onGuardianSelected: (String) -> Unit,
+    onInviteGuardians: () -> Unit,
     onPlanRoute: () -> Unit,
     onStartRun: () -> Unit,
     onBack: () -> Unit
@@ -87,17 +88,24 @@ fun PrepareRunScreen(
                     }
                 }
             }
+
+            // Sin guardianes aceptados no se puede salir: se invita a buscar uno primero.
+            if (uiState.guardiansLoaded && uiState.guardians.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.run_no_accepted_guardians),
+                    color = MaterialTheme.colorScheme.error
+                )
+                OutlinedButton(onClick = onInviteGuardians, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.run_invite_guardians))
+                }
+            }
+
             if (uiState.needsGuardian) {
                 Text(
                     text = stringResource(R.string.guardian_required),
                     color = MaterialTheme.colorScheme.error
                 )
             }
-            Text(
-                text = stringResource(R.string.run_mock_notice),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
             OutlinedButton(onClick = onPlanRoute, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.plan_route))
             }
