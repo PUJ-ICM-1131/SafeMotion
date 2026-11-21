@@ -96,6 +96,17 @@
         <item quantity="one">Invitación enviada</item>
         <item quantity="other">%1$d invitaciones enviadas</item>
     </plurals>
+    <plurals name="invitations_already">
+        <item quantity="one">1 contacto ya tenía una invitación</item>
+        <item quantity="other">%1$d contactos ya tenían una invitación</item>
+    </plurals>
+    <string name="invite_result_title">Invitaciones</string>
+    <string name="invite_without_account">Todavía no usan SafeMotion: %1$s. Pídeles que se registren con ese número de teléfono.</string>
+    <string name="invite_failed">No se pudieron enviar las invitaciones. Revisa tu conexión e intenta de nuevo.</string>
+    <string name="understood">Entendido</string>
+    <string name="contacts_permission_denied">Necesitamos permiso para leer tus contactos y elegir a tus guardianes.</string>
+    <string name="contacts_permission_retry">Dar permiso</string>
+    <string name="contacts_empty">No encontramos contactos con número de teléfono.</string>
 
     <!-- Invitaciones recibidas (HU-03) -->
     <string name="invitations_title">Invitaciones recibidas</string>

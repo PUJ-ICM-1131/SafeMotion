@@ -1,9 +1,6 @@
 package com.example.safemotion.ui.screens.routeplanner
 
 import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,15 +22,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import com.example.safemotion.R
 import com.example.safemotion.data.model.MapPoint
 import com.example.safemotion.data.model.RouteProfile
 import com.example.safemotion.ui.components.RiskOsmMap
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
+private val LocationPermissions = listOf(
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.ACCESS_COARSE_LOCATION
+)
+
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun RoutePlannerScreen(
     modifier: Modifier = Modifier,
@@ -45,33 +49,16 @@ fun RoutePlannerScreen(
     onCalculateRoute: () -> Unit,
     onBack: () -> Unit
 ) {
-    val context = LocalContext.current
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (granted) onLoadCurrentLocation() else onPermissionDenied()
+    // Permiso de ubicación con Accompanist: basta con la precisa o la aproximada.
+    val locationPermissions = rememberMultiplePermissionsState(LocationPermissions) { results ->
+        if (results.values.any { it }) onLoadCurrentLocation() else onPermissionDenied()
     }
 
     fun requestCurrentLocation() {
-        val hasFineLocation = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val hasCoarseLocation = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        if (hasFineLocation || hasCoarseLocation) {
+        if (locationPermissions.permissions.any { it.status.isGranted }) {
             onLoadCurrentLocation()
         } else {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+            locationPermissions.launchMultiplePermissionRequest()
         }
     }
 

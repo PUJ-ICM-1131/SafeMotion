@@ -38,6 +38,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
     implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0")
     implementation("io.ktor:ktor-client-core:3.6.0")
     implementation("io.ktor:ktor-client-okhttp:3.6.0")

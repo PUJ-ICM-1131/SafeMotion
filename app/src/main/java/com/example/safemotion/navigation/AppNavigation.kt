@@ -20,6 +20,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.safemotion.data.model.RouteProfile
 import com.example.safemotion.data.remote.osrm.KtorOsrmRouteService
+import com.example.safemotion.data.repository.ContactsRepository
 import com.example.safemotion.data.repository.EvidencePhotoStorage
 import com.example.safemotion.data.repository.FirebaseAuthRepository
 import com.example.safemotion.data.repository.LocationRepository
@@ -63,6 +64,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val locationRepository = remember { LocationRepository(context.applicationContext) }
     val evidencePhotoStorage = remember { EvidencePhotoStorage(context.applicationContext) }
+    val contactsRepository = remember { ContactsRepository(context.applicationContext) }
     val authViewModel: AuthViewModel = viewModel()
     val startRoute = remember { if (authViewModel.restoreSession()) HomeRoute else AuthRoute }
     val backStack = rememberNavBackStack(startRoute)
@@ -267,13 +269,15 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         uiState = uiState,
                         onQueryChange = guardiansViewModel::changeSearchQuery,
                         onToggleContact = guardiansViewModel::toggleContact,
-                        onSend = {
-                            if (guardiansViewModel.sendInvitations()) {
-                                backStack.removeLastOrNull()
-                            }
-                        },
+                        onSend = guardiansViewModel::sendInvitations,
                         onClose = {
                             guardiansViewModel.clearSelection()
+                            backStack.removeLastOrNull()
+                        },
+                        onLoadContacts = { guardiansViewModel.loadContacts(contactsRepository::loadContacts) },
+                        onPermissionDenied = guardiansViewModel::onContactsPermissionDenied,
+                        onResultDismissed = {
+                            guardiansViewModel.consumeInviteResult()
                             backStack.removeLastOrNull()
                         }
                     )
@@ -285,7 +289,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     }
                     InvitationsScreen(
                         uiState = uiState,
-                        onRespond = { id -> invitationsViewModel.respond(id) },
+                        onRespond = { id, accepted -> invitationsViewModel.respond(id, accepted) },
                         onUndo = invitationsViewModel::undoResponse,
                         onBack = { backStack.removeLastOrNull() }
                     )

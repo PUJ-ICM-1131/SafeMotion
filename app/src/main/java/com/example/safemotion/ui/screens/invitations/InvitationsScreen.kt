@@ -14,11 +14,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.DirectionsBike
-import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,7 +42,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.safemotion.R
-import com.example.safemotion.data.model.ActivityType
 import com.example.safemotion.data.model.ReceivedInvitation
 import com.example.safemotion.data.model.firstNameOf
 import com.example.safemotion.ui.screens.guardians.InitialsAvatar
@@ -54,7 +52,7 @@ import kotlinx.coroutines.launch
 fun InvitationsScreen(
     modifier: Modifier = Modifier,
     uiState: InvitationsUiState,
-    onRespond: (String) -> Unit,
+    onRespond: (String, Boolean) -> Unit,
     onUndo: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -99,7 +97,7 @@ fun InvitationsScreen(
                 }
                 items(uiState.invitations, key = { it.id }) { invitation ->
                     val responder: (Boolean) -> Unit = { aceptada ->
-                        onRespond(invitation.id)
+                        onRespond(invitation.id, aceptada)
                         val nombre = firstNameOf(invitation.runnerName)
                         val mensaje = if (aceptada) {
                             resources.getString(R.string.invitation_accepted, nombre)
@@ -134,15 +132,6 @@ private fun InvitationCard(
     onAccept: () -> Unit,
     onReject: () -> Unit
 ) {
-    val activityIcon = when (invitation.activity) {
-        ActivityType.RUNNING -> Icons.AutoMirrored.Filled.DirectionsRun
-        ActivityType.CYCLING -> Icons.AutoMirrored.Filled.DirectionsBike
-    }
-    val activityLabel = when (invitation.activity) {
-        ActivityType.RUNNING -> stringResource(R.string.activity_running)
-        ActivityType.CYCLING -> stringResource(R.string.activity_cycling)
-    }
-
     Card(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -163,7 +152,7 @@ private fun InvitationCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = activityIcon,
+                            imageVector = Icons.Default.Phone,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp)
@@ -171,7 +160,7 @@ private fun InvitationCard(
                         Text(
                             text = stringResource(
                                 R.string.invitation_detail,
-                                activityLabel,
+                                invitation.runnerPhone,
                                 invitation.sentAt
                             ),
                             style = MaterialTheme.typography.bodyMedium,
