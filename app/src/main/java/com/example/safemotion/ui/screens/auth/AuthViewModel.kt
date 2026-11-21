@@ -75,7 +75,7 @@ class AuthViewModel(
         viewModelScope.launch {
             val failure = when (state.mode) {
                 AuthMode.SignIn -> repository.signIn(email, state.password)
-                AuthMode.Register -> repository.register(state.name.trim(), email, state.password)
+                AuthMode.Register -> repository.register(state.name.trim(), state.phone.trim(), email, state.password)
                 AuthMode.Recover -> repository.sendPasswordReset(email)
             }
             _uiState.update {

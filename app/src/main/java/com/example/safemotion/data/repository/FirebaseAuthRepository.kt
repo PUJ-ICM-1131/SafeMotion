@@ -1,6 +1,7 @@
 package com.example.safemotion.data.repository
 
 import com.example.safemotion.data.model.AppUser
+import com.example.safemotion.data.model.phoneKey
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -10,12 +11,17 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
 object FirebaseAuthRepository : AuthRepository {
+    const val USERS = "users"
+
     // Se obtiene al usarlo para que las pruebas unitarias no inicialicen Firebase.
     private val auth get() = Firebase.auth
+    private val users get() = Firebase.firestore.collection(USERS)
 
     override var currentUser: AppUser? = null
         private set
@@ -27,13 +33,32 @@ object FirebaseAuthRepository : AuthRepository {
 
     override suspend fun signIn(email: String, password: String): AuthFailure? = runAuth {
         val result = auth.signInWithEmailAndPassword(email, password).await()
-        currentUser = result.user?.toAppUser()
+        val user = result.user?.toAppUser()
+        // Las cuentas creadas antes de Firestore no tenían perfil; se completa sin borrar el teléfono.
+        // Si falla, el usuario igual puede entrar.
+        user?.let {
+            runCatching {
+                users.document(it.uid)
+                    .set(mapOf("name" to it.name, "email" to it.email), SetOptions.merge())
+                    .await()
+            }
+        }
+        currentUser = user
     }
 
-    override suspend fun register(name: String, email: String, password: String): AuthFailure? = runAuth {
-        val user = auth.createUserWithEmailAndPassword(email, password).await().user
-        user?.updateProfile(userProfileChangeRequest { displayName = name })?.await()
-        currentUser = AppUser(name = name, email = email)
+    override suspend fun register(name: String, phone: String, email: String, password: String): AuthFailure? = runAuth {
+        val user = auth.createUserWithEmailAndPassword(email, password).await().user ?: return@runAuth
+        user.updateProfile(userProfileChangeRequest { displayName = name }).await()
+        // Perfil público para que otras cuentas encuentren a este usuario por su teléfono.
+        users.document(user.uid).set(
+            mapOf(
+                "name" to name,
+                "email" to email,
+                "phone" to phone,
+                "phoneKey" to phoneKey(phone)
+            )
+        ).await()
+        currentUser = AppUser(uid = user.uid, name = name, email = email)
     }
 
     override suspend fun sendPasswordReset(email: String): AuthFailure? = runAuth {
@@ -65,6 +90,7 @@ object FirebaseAuthRepository : AuthRepository {
     }
 
     private fun FirebaseUser.toAppUser() = AppUser(
+        uid = uid,
         name = displayName.orEmpty(),
         email = email.orEmpty()
     )

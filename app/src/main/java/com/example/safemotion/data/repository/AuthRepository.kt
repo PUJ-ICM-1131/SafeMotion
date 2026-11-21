@@ -8,7 +8,7 @@ interface AuthRepository {
     val currentUser: AppUser?
     fun restoreSession(): Boolean
     suspend fun signIn(email: String, password: String): AuthFailure?
-    suspend fun register(name: String, email: String, password: String): AuthFailure?
+    suspend fun register(name: String, phone: String, email: String, password: String): AuthFailure?
     suspend fun sendPasswordReset(email: String): AuthFailure?
     fun signOut()
 }
