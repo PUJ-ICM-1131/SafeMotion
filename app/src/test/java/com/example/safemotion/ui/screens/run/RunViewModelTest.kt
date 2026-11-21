@@ -5,10 +5,12 @@ import com.example.safemotion.data.model.Guardian
 import com.example.safemotion.data.model.IncidentType
 import com.example.safemotion.data.model.InvitationStatus
 import com.example.safemotion.data.model.InviteResult
+import com.example.safemotion.data.model.MapPoint
 import com.example.safemotion.data.model.ReceivedInvitation
 import com.example.safemotion.data.model.RunActivityType
 import com.example.safemotion.data.repository.GuardianRepository
 import com.example.safemotion.data.repository.MockRunRepository
+import com.example.safemotion.data.repository.PositionTracker
 import com.example.safemotion.data.repository.RunTrackingRepository
 import com.example.safemotion.data.sensor.RunSensorMonitor
 import com.example.safemotion.data.sensor.SensorStatus
@@ -48,12 +50,13 @@ class RunViewModelTest {
 
     private val guardians = FakeGuardianRepository()
     private val tracking = FakeRunTrackingRepository()
+    private val gps = FakePositionTracker()
 
     // Crea el ViewModel y espera a que lleguen los guardianes del repositorio falso.
     private fun TestScope.newViewModel(
         monitor: FakeSensorMonitor = FakeSensorMonitor()
     ): RunViewModel {
-        val viewModel = RunViewModel(monitor, guardians, tracking)
+        val viewModel = RunViewModel(monitor, guardians, tracking, gps)
         viewModel.loadGuardians()
         runCurrent()
         return viewModel
@@ -106,6 +109,33 @@ class RunViewModelTest {
         assertEquals(RunPhase.PREPARING, viewModel.uiState.value.phase)
         assertNull(viewModel.uiState.value.sessionId)
         assertEquals(1, MockRunRepository.completedRuns.value.size)
+    }
+
+    @Test
+    fun eachPositionIsPublishedAndOnlyRealMovementAddsDistance() = runTest {
+        val viewModel = newViewModel()
+        viewModel.toggleGuardian("uid-laura")
+        viewModel.startRun()
+        runCurrent()
+        assertEquals(1, gps.positions.subscriptionCount.value)
+
+        val start = MapPoint(4.6000, -74.0800)
+        gps.positions.emit(start)
+        gps.positions.emit(MapPoint(4.60001, -74.0800)) // 1 m: ruido del GPS
+        gps.positions.emit(MapPoint(4.6005, -74.0800)) // 50 m desde el inicio
+        runCurrent()
+
+        assertEquals(3, tracking.published.size)
+        assertEquals(listOf(true, false, true), tracking.published.map { it.addToRoute })
+        assertEquals(0.05, tracking.published.last().distanceKm, 0.0001)
+        assertEquals(0.05, viewModel.uiState.value.session?.distanceKm ?: 0.0, 0.0001)
+        assertEquals(MapPoint(4.6005, -74.0800), viewModel.uiState.value.currentLocation)
+
+        // Al terminar, el GPS deja de escucharse y la sesión queda finalizada.
+        assertTrue(viewModel.finishRun())
+        runCurrent()
+        assertEquals(0, gps.positions.subscriptionCount.value)
+        assertEquals(listOf("session-1"), tracking.finished)
     }
 
     @Test
@@ -200,8 +230,11 @@ class RunViewModelTest {
         override suspend fun undoResponse(invitationId: String) = Unit
     }
 
+    private data class Published(val point: MapPoint, val distanceKm: Double, val addToRoute: Boolean)
+
     private class FakeRunTrackingRepository : RunTrackingRepository {
         val started = mutableListOf<Pair<RunActivityType, Set<String>>>()
+        val published = mutableListOf<Published>()
         val finished = mutableListOf<String>()
         var failOnStart = false
 
@@ -211,9 +244,29 @@ class RunViewModelTest {
             return "session-${started.size}"
         }
 
+        override fun publishPosition(
+            sessionId: String,
+            point: MapPoint,
+            distanceKm: Double,
+            elapsedSeconds: Long,
+            addToRoute: Boolean
+        ) {
+            published += Published(point, distanceKm, addToRoute)
+        }
+
         override fun finishSession(sessionId: String, distanceKm: Double, elapsedSeconds: Long) {
             finished += sessionId
         }
+    }
+
+    // GPS falso: 0.00001° de latitud equivale a 1 m para que las cuentas sean fáciles.
+    private class FakePositionTracker : PositionTracker {
+        val positions = MutableSharedFlow<MapPoint>(extraBufferCapacity = 10)
+
+        override fun positions(): Flow<MapPoint> = positions
+
+        override fun distanceMeters(from: MapPoint, to: MapPoint): Float =
+            (kotlin.math.abs(to.latitude - from.latitude) * 100_000).toFloat()
     }
 
     private class FakeSensorMonitor : RunSensorMonitor {

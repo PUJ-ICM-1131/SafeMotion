@@ -5,6 +5,7 @@ import com.example.safemotion.data.model.RunActivityType
 import com.example.safemotion.data.model.RunGuardian
 import com.example.safemotion.data.model.RunSession
 import com.example.safemotion.data.sensor.SensorStatus
+import com.example.safemotion.data.model.MapPoint
 
 enum class RunPhase { PREPARING, ACTIVE, ALERT }
 
@@ -17,6 +18,7 @@ data class RunUiState(
     val needsGuardian: Boolean = false,
     val session: RunSession? = null,
     val sessionId: String? = null,
+    val currentLocation: MapPoint? = null,
     val isStarting: Boolean = false,
     val startFailed: Boolean = false,
     val locationDenied: Boolean = false,

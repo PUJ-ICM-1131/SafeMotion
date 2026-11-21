@@ -3,26 +3,29 @@ package com.example.safemotion.ui.screens.run
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.safemotion.data.model.IncidentType
+import com.example.safemotion.data.model.InvitationStatus
+import com.example.safemotion.data.model.MapPoint
+import com.example.safemotion.data.model.RunGuardian
 import com.example.safemotion.data.model.RunActivityType
+import com.example.safemotion.data.repository.GuardianRepository
 import com.example.safemotion.data.repository.MockRunRepository
+import com.example.safemotion.data.repository.PositionTracker
+import com.example.safemotion.data.repository.RunTrackingRepository
 import com.example.safemotion.data.sensor.RunSensorMonitor
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.example.safemotion.data.model.InvitationStatus
-import com.example.safemotion.data.model.RunGuardian
-import com.example.safemotion.data.repository.GuardianRepository
-import kotlinx.coroutines.flow.catch
-import com.example.safemotion.data.repository.RunTrackingRepository
-import kotlinx.coroutines.CancellationException
 
 class RunViewModel(
     private val sensorMonitor: RunSensorMonitor,
     private val guardianRepository: GuardianRepository,
-    private val trackingRepository: RunTrackingRepository
+    private val trackingRepository: RunTrackingRepository,
+    private val positionTracker: PositionTracker
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         RunUiState(
@@ -32,9 +35,15 @@ class RunViewModel(
     )
     val uiState = _uiState.asStateFlow()
 
-    private var runClock: Job? = null
     private var guardiansJob: Job? = null
+    private var runClock: Job? = null
+    private var trackingJob: Job? = null
     private var alertClock: Job? = null
+
+    // Progreso real del recorrido, calculado con el GPS.
+    private var elapsedSeconds = 0L
+    private var distanceMeters = 0.0
+    private var lastCountedPoint: MapPoint? = null
 
     init {
         viewModelScope.launch {
@@ -124,7 +133,7 @@ class RunViewModel(
             _uiState.update {
                 it.copy(phase = RunPhase.ACTIVE, session = session, sessionId = sessionId, isStarting = false)
             }
-            startTracking()
+            startTracking(sessionId)
         }
     }
 
@@ -132,16 +141,59 @@ class RunViewModel(
         _uiState.update { it.copy(locationDenied = true) }
     }
 
-    private fun startTracking() {
+    private fun startTracking(sessionId: String) {
         sensorMonitor.start()
+        elapsedSeconds = 0L
+        distanceMeters = 0.0
+        lastCountedPoint = null
         runClock?.cancel()
         runClock = viewModelScope.launch {
             while (true) {
                 delay(1_000)
-                val updated = MockRunRepository.advanceOneSecond() ?: break
-                _uiState.update { it.copy(session = updated) }
+                elapsedSeconds++
+                if (!refreshProgress()) break
             }
         }
+        trackingJob?.cancel()
+        trackingJob = viewModelScope.launch {
+            positionTracker.positions()
+                .catch { /* Sin permiso o sin GPS: el recorrido sigue, pero sin publicar posición. */ }
+                .collect { point -> onPosition(sessionId, point) }
+        }
+    }
+
+    // Con cada posición: suma la distancia, actualiza la pantalla y publica en Firestore.
+    private fun onPosition(sessionId: String, point: MapPoint) {
+        val previous = lastCountedPoint
+        val step = previous?.let { positionTracker.distanceMeters(it, point) } ?: 0f
+        // Saltos de menos de 3 m son ruido del GPS: no suman distancia ni puntos al trazado.
+        val moved = previous == null || step >= MIN_STEP_METERS
+        if (moved) {
+            distanceMeters += step
+            lastCountedPoint = point
+        }
+        refreshProgress(point)
+        trackingRepository.publishPosition(
+            sessionId = sessionId,
+            point = point,
+            distanceKm = distanceMeters / 1_000.0,
+            elapsedSeconds = elapsedSeconds,
+            addToRoute = moved
+        )
+    }
+
+    private fun refreshProgress(location: MapPoint? = null): Boolean {
+        val session = MockRunRepository.updateProgress(
+            elapsedSeconds = elapsedSeconds.toInt(),
+            distanceKm = distanceMeters / 1_000.0
+        ) ?: return false
+        _uiState.update { it.copy(session = session, currentLocation = location ?: it.currentLocation) }
+        return true
+    }
+
+    private fun stopTracking() {
+        runClock?.cancel()
+        trackingJob?.cancel()
     }
 
     fun simulateIncident(type: IncidentType): Boolean {
@@ -191,7 +243,7 @@ class RunViewModel(
 
     fun finishRun(): Boolean {
         if (_uiState.value.phase != RunPhase.ACTIVE) return false
-        runClock?.cancel()
+        stopTracking()
         alertClock?.cancel()
         sensorMonitor.stop()
         val finished = MockRunRepository.finishRun() ?: return false
@@ -204,6 +256,7 @@ class RunViewModel(
                 selectedGuardianIds = emptySet(),
                 session = null,
                 sessionId = null,
+                currentLocation = null,
                 incidentType = null,
                 secondsToCancel = 30,
                 alertSent = false
@@ -213,6 +266,11 @@ class RunViewModel(
     }
 
     override fun onCleared() {
+        stopTracking()
         sensorMonitor.stop()
+    }
+
+    private companion object {
+        const val MIN_STEP_METERS = 3f
     }
 }

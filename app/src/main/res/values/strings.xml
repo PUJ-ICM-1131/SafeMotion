@@ -51,7 +51,8 @@
     <string name="run_time">Tiempo: %1$02d:%2$02d</string>
     <string name="run_distance">Distancia: %1$.2f km</string>
     <string name="run_guardians_connected">Guardianes conectados: %1$d</string>
-    <string name="run_gps_mock">GPS disponible (simulado)</string>
+    <string name="run_gps_active">GPS activo · tus guardianes ven tu ubicación</string>
+    <string name="run_gps_searching">Buscando señal de GPS…</string>
     <string name="run_sensors_active">Detección automática activa</string>
     <string name="run_sensors_unavailable">Detección automática no disponible</string>
     <string name="run_accelerometer_status">Acelerómetro: %1$s</string>

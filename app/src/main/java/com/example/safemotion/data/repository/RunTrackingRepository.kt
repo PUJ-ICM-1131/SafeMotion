@@ -1,10 +1,12 @@
 package com.example.safemotion.data.repository
 
+import com.example.safemotion.data.model.MapPoint
 import com.example.safemotion.data.model.RunActivityType
 import com.example.safemotion.data.model.TrackingStatus
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 
@@ -12,6 +14,18 @@ import kotlinx.coroutines.tasks.await
 interface RunTrackingRepository {
     /** Crea sessions/{id} con estado ACTIVE y devuelve el id de la sesión. */
     suspend fun startSession(activity: RunActivityType, guardianUids: Set<String>): String
+
+    /**
+     * Publica una posición: actualiza lastLocation, updatedAt, distancia y tiempo de la sesión y,
+     * si [addToRoute], agrega un punto al trazado en sessions/{id}/points.
+     */
+    fun publishPosition(
+        sessionId: String,
+        point: MapPoint,
+        distanceKm: Double,
+        elapsedSeconds: Long,
+        addToRoute: Boolean
+    )
 
     /** Marca la sesión como FINISHED con el tiempo y la distancia finales. */
     fun finishSession(sessionId: String, distanceKm: Double, elapsedSeconds: Long)
@@ -46,6 +60,35 @@ object FirestoreRunTrackingRepository : RunTrackingRepository {
             )
         ).await()
         return session.id
+    }
+
+    override fun publishPosition(
+        sessionId: String,
+        point: MapPoint,
+        distanceKm: Double,
+        elapsedSeconds: Long,
+        addToRoute: Boolean
+    ) {
+        val session = sessions.document(sessionId)
+        val location = GeoPoint(point.latitude, point.longitude)
+        // Un batch envía las dos escrituras juntas: o se guardan ambas o ninguna.
+        val batch = db.batch()
+        batch.update(
+            session,
+            mapOf(
+                "lastLocation" to location,
+                "updatedAt" to FieldValue.serverTimestamp(),
+                "distanceKm" to distanceKm,
+                "elapsedSeconds" to elapsedSeconds
+            )
+        )
+        if (addToRoute) {
+            batch.set(
+                session.collection(FirestoreGuardianTrackingRepository.POINTS).document(),
+                mapOf("location" to location, "at" to FieldValue.serverTimestamp())
+            )
+        }
+        batch.commit()
     }
 
     override fun finishSession(sessionId: String, distanceKm: Double, elapsedSeconds: Long) {

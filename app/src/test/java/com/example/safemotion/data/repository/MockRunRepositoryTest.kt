@@ -28,7 +28,7 @@ class MockRunRepositoryTest {
         assertEquals(2, started?.guardianIds?.size)
         assertNull(MockRunRepository.startRun(RunActivityType.RUNNING, setOf("g1")))
 
-        repeat(10) { MockRunRepository.advanceOneSecond() }
+        MockRunRepository.updateProgress(elapsedSeconds = 10, distanceKm = 0.06)
         val finished = MockRunRepository.finishRun()
 
         assertEquals(10, finished?.durationSeconds)

@@ -24,13 +24,11 @@ object MockRunRepository {
         if (_activeRun.value != null || guardianIds.isEmpty()) return null
         return RunSession(activity, guardianIds).also { _activeRun.value = it }
     }
-    fun advanceOneSecond(): RunSession? {
+    // El tiempo y la distancia los calcula RunViewModel con el GPS; aquí solo se guardan.
+    fun updateProgress(elapsedSeconds: Int, distanceKm: Double): RunSession? {
         val current = _activeRun.value ?: return null
-        val distancePerSecond = if (current.activity == RunActivityType.RUNNING) 0.003 else 0.006
-        return current.copy(
-            elapsedSeconds = current.elapsedSeconds + 1,
-            distanceKm = current.distanceKm + distancePerSecond
-        ).also { _activeRun.value = it }
+        return current.copy(elapsedSeconds = elapsedSeconds, distanceKm = distanceKm)
+            .also { _activeRun.value = it }
     }
 
     fun finishRun(): CompletedRun? {

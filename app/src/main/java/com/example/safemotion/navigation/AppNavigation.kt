@@ -76,7 +76,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                 RunViewModel(
                     sensorMonitor = AndroidRunSensorMonitor(context.applicationContext),
                     guardianRepository = FirestoreGuardianRepository,
-                    trackingRepository = FirestoreRunTrackingRepository
+                    trackingRepository = FirestoreRunTrackingRepository,
+                    positionTracker = locationRepository
                 )
             }
         }
