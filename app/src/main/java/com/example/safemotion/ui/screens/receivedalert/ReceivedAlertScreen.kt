@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.PersonalInjury
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +32,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.safemotion.R
 import com.example.safemotion.data.model.IncidentType
+import com.example.safemotion.data.model.RunActivityType
+import com.example.safemotion.data.model.TrackingStatus
 import java.text.DateFormat
 import java.util.Date
 
@@ -57,7 +60,15 @@ fun ReceivedAlertScreen(
         }
     ) { innerPadding ->
         val alert = uiState.alert
-        if (alert == null) {
+        if (uiState.isLoading) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (alert == null) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(innerPadding).padding(24.dp),
                 verticalArrangement = Arrangement.Center,
@@ -89,9 +100,13 @@ fun ReceivedAlertScreen(
                         Text(alert.runnerName, style = MaterialTheme.typography.titleLarge)
                         Text(
                             stringResource(
-                                R.string.received_alert_run_in_progress,
+                                if (uiState.session?.status == TrackingStatus.FINISHED) {
+                                    R.string.received_alert_run_finished
+                                } else {
+                                    R.string.received_alert_run_in_progress
+                                },
                                 stringResource(
-                                    if (uiState.monitoredSessionId == "session-laura") {
+                                    if (uiState.session?.activity == RunActivityType.CYCLING) {
                                         R.string.monitoring_activity_cycling
                                     } else {
                                         R.string.monitoring_activity_running
@@ -120,12 +135,11 @@ fun ReceivedAlertScreen(
                 AlertDetail(
                     icon = Icons.Default.LocationOn,
                     label = stringResource(R.string.received_alert_location_label),
-                    value = alert.lastLocation
-                )
-                Text(
-                    stringResource(R.string.received_alert_mock_notice),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    value = uiState.address
+                        ?: alert.location?.let {
+                            stringResource(R.string.monitoring_coordinates, it.latitude, it.longitude)
+                        }
+                        ?: stringResource(R.string.received_alert_no_location)
                 )
                 Button(
                     onClick = { uiState.monitoredSessionId?.let(onOpenMap) },
