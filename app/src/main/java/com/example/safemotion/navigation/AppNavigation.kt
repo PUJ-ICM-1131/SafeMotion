@@ -24,7 +24,6 @@ import com.example.safemotion.data.repository.ContactsRepository
 import com.example.safemotion.data.repository.EvidencePhotoStorage
 import com.example.safemotion.data.repository.FirebaseAuthRepository
 import com.example.safemotion.data.repository.LocationRepository
-import com.example.safemotion.data.repository.MockGuardianTrackingRepository
 import com.example.safemotion.data.repository.MockRunRepository
 import com.example.safemotion.data.repository.OsrmRouteRepository
 import com.example.safemotion.data.sensor.AndroidRunSensorMonitor
@@ -78,8 +77,13 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val invitationsViewModel: InvitationsViewModel = viewModel()
     val riskMapViewModel: RiskMapViewModel = viewModel()
     val reportRiskViewModel: ReportRiskViewModel = viewModel()
-    val monitoringViewModel: MonitoringViewModel = viewModel()
-    val receivedAlertViewModel: ReceivedAlertViewModel = viewModel()
+    // El guardián ve la dirección del corredor con el mismo Geocoder del reporte de riesgo.
+    val monitoringViewModel: MonitoringViewModel = viewModel {
+        MonitoringViewModel(addressFor = locationRepository::addressFor)
+    }
+    val receivedAlertViewModel: ReceivedAlertViewModel = viewModel {
+        ReceivedAlertViewModel(addressFor = locationRepository::addressFor)
+    }
     val historyViewModel: HistoryViewModel = viewModel()
     val routePlannerViewModel: RoutePlannerViewModel = viewModel {
         RoutePlannerViewModel(
@@ -342,7 +346,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         uiState = uiState,
                         onBack = { backStack.removeLastOrNull() },
                         onCall = {
-                            uiState.session?.phone?.let { phone -> dialPhone(context, phone) }
+                            uiState.session?.phone
+                                ?.takeIf { it.isNotBlank() }
+                                ?.let { phone -> dialPhone(context, phone) }
                         }
                     )
                 }
@@ -356,9 +362,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         onBack = { backStack.removeLastOrNull() },
                         onOpenMap = { sessionId -> backStack.add(MonitoringRoute(sessionId)) },
                         onCall = {
-                            uiState.monitoredSessionId
-                                ?.let(MockGuardianTrackingRepository::findSession)
-                                ?.phone
+                            uiState.alert?.runnerPhone
+                                ?.takeIf { it.isNotBlank() }
                                 ?.let { phone -> dialPhone(context, phone) }
                         }
                     )

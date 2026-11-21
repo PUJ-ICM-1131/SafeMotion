@@ -79,11 +79,17 @@ fun RiskOsmMap(
     routePoints: List<MapPoint> = emptyList(),
     destinationLabel: String = "",
     routeColor: Color = Color(0xFF6750A4),
-    onMapClick: ((MapPoint) -> Unit)? = null
+    onMapClick: ((MapPoint) -> Unit)? = null,
+    // Nombre del punto azul; por defecto "Mi ubicación". El guardián lo usa para el corredor.
+    userLocationLabel: String? = null,
+    // Ajusta el zoom a toda la ruta cuando cambia. El seguimiento en vivo lo apaga para seguir al corredor.
+    fitRoute: Boolean = true,
+    // Si se indica, el mapa se acerca a este nivel de zoom al seguir la ubicación (16 = calles).
+    followZoom: Double? = null
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val myLocationLabel = stringResource(R.string.map_my_location)
+    val myLocationLabel = userLocationLabel ?: stringResource(R.string.map_my_location)
     val currentMapClick = rememberUpdatedState(onMapClick)
 
     // El MapView se crea una sola vez y sobrevive a las recomposiciones.
@@ -138,7 +144,14 @@ fun RiskOsmMap(
 
     // Cuando llega la ubicación del usuario (o se vuelve a pedir), el mapa se centra en ella.
     LaunchedEffect(userLocation, recenterKey) {
-        userLocation?.let { mapView.controller.animateTo(GeoPoint(it.latitude, it.longitude)) }
+        userLocation?.let {
+            val point = GeoPoint(it.latitude, it.longitude)
+            if (followZoom != null) {
+                mapView.controller.animateTo(point, followZoom, 600L)
+            } else {
+                mapView.controller.animateTo(point)
+            }
+        }
     }
 
     AndroidView(
@@ -192,7 +205,7 @@ fun RiskOsmMap(
                 )
             }
             val currentRouteHash = routePoints.hashCode()
-            if (routePoints.size >= 2 && currentRouteHash != routeHash[0]) {
+            if (fitRoute && routePoints.size >= 2 && currentRouteHash != routeHash[0]) {
                 routeHash[0] = currentRouteHash
                 map.zoomToBoundingBox(
                     BoundingBox.fromGeoPoints(

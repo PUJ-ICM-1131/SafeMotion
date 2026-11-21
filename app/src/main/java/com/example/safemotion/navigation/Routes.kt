@@ -39,10 +39,10 @@ data object RiskMapRoute : NavKey
 data object ReportRiskRoute : NavKey
 
 @Serializable
-data class MonitoringRoute(val sessionId: String = "session-laura") : NavKey
+data class MonitoringRoute(val sessionId: String? = null) : NavKey
 
 @Serializable
-data class ReceivedAlertRoute(val alertId: String = "alert-camilo") : NavKey
+data class ReceivedAlertRoute(val alertId: String? = null) : NavKey
 
 @Serializable
 data object HistoryRoute : NavKey

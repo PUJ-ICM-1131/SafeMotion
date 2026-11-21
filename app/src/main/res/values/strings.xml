@@ -172,7 +172,6 @@
     <!-- Monitoreo del guardián (HU-05) -->
     <string name="monitoring_title">Monitoreo del guardián</string>
     <string name="monitoring_live_location">Ubicación en vivo</string>
-    <string name="monitoring_mock_notice">Ubicación y trazado simulados para esta entrega.</string>
     <string name="monitoring_status_active">En curso</string>
     <string name="monitoring_status_interrupted">Interrumpida</string>
     <string name="monitoring_status_finished">Finalizada</string>
@@ -192,16 +191,19 @@
         <item quantity="other">Sin actualizaciones desde hace %1$d minutos</item>
     </plurals>
     <string name="monitoring_interrupted_alert">Alerta por posible incidente</string>
-    <string name="monitoring_map_description">Mapa simulado de la ruta de %1$s</string>
-    <string name="monitoring_current_location">Ubicación actual simulada</string>
+    <string name="monitoring_current_location">Ubicación actual</string>
+    <string name="monitoring_coordinates">%1$.5f, %2$.5f</string>
+    <string name="monitoring_waiting_location">Esperando la primera ubicación…</string>
     <string name="monitoring_call">Llamar a %1$s</string>
-    <string name="monitoring_missing_title">Sesión no disponible</string>
-    <string name="monitoring_missing_description">La sesión terminó o ya no está compartiendo ubicación.</string>
+    <string name="monitoring_missing_title">Nadie está entrenando ahora</string>
+    <string name="monitoring_missing_description">Cuando alguien que acompañas inicie un recorrido, lo verás aquí en tiempo real.</string>
 
     <!-- Alerta recibida (HU-08) -->
     <string name="received_alert_title">Alerta de incidente</string>
-    <string name="received_alert_recent">Recibida hace 1 minuto</string>
+    <string name="received_alert_recent">Necesita tu atención</string>
     <string name="received_alert_run_in_progress">%1$s · recorrido en curso</string>
+    <string name="received_alert_run_finished">%1$s · recorrido finalizado</string>
+    <string name="received_alert_no_location">Sin ubicación registrada</string>
     <string name="received_alert_type_label">Tipo de incidente</string>
     <string name="received_alert_fall">Posible caída</string>
     <string name="received_alert_inactivity">Posible inactividad</string>
@@ -209,9 +211,8 @@
     <string name="received_alert_location_label">Última ubicación</string>
     <string name="received_alert_open_map">Ver en el mapa</string>
     <string name="received_alert_call">Llamar a %1$s</string>
-    <string name="received_alert_mock_notice">Alerta y notificación simuladas para esta entrega.</string>
-    <string name="received_alert_missing_title">Alerta no disponible</string>
-    <string name="received_alert_missing_description">No encontramos los datos de esta alerta.</string>
+    <string name="received_alert_missing_title">No tienes alertas</string>
+    <string name="received_alert_missing_description">Si alguien que acompañas tiene una caída o deja de moverse, la alerta aparecerá aquí.</string>
 
     <!-- Historial de recorridos (HU-11) -->
     <string name="history_title">Historial</string>
