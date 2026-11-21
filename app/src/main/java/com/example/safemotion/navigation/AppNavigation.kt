@@ -58,6 +58,7 @@ import com.example.safemotion.ui.screens.routeplanner.RoutePlannerViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import com.example.safemotion.data.repository.FirestoreGuardianRepository
+import com.example.safemotion.data.repository.FirestoreRunTrackingRepository
 
 @Composable
 fun AppNavigation(modifier: Modifier = Modifier) {
@@ -74,7 +75,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             initializer {
                 RunViewModel(
                     sensorMonitor = AndroidRunSensorMonitor(context.applicationContext),
-                    guardianRepository = FirestoreGuardianRepository
+                    guardianRepository = FirestoreGuardianRepository,
+                    trackingRepository = FirestoreRunTrackingRepository
                 )
             }
         }
@@ -113,6 +115,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         runViewModel.uiState.map { it.phase }.distinctUntilChanged().collect { phase ->
             if (phase == RunPhase.ALERT && backStack.lastOrNull() == ActiveRunRoute) {
                 backStack.add(IncidentAlertRoute)
+            }
+            if (phase == RunPhase.ACTIVE && backStack.lastOrNull() == PrepareRunRoute) {
+                backStack.add(ActiveRunRoute)
             }
         }
     }
@@ -220,9 +225,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                             }
                             backStack.add(RoutePlannerRoute(profile))
                         },
-                        onStartRun = {
-                            if (runViewModel.startRun()) backStack.add(ActiveRunRoute)
-                        },
+                        onStartRun = runViewModel::startRun,
+                        onLocationDenied = runViewModel::onLocationDenied,
                         onBack = { backStack.removeLastOrNull() }
                     )
                 }

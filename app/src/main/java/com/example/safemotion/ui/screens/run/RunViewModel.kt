@@ -16,10 +16,13 @@ import com.example.safemotion.data.model.InvitationStatus
 import com.example.safemotion.data.model.RunGuardian
 import com.example.safemotion.data.repository.GuardianRepository
 import kotlinx.coroutines.flow.catch
+import com.example.safemotion.data.repository.RunTrackingRepository
+import kotlinx.coroutines.CancellationException
 
 class RunViewModel(
     private val sensorMonitor: RunSensorMonitor,
-    private val guardianRepository: GuardianRepository
+    private val guardianRepository: GuardianRepository,
+    private val trackingRepository: RunTrackingRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         RunUiState(
@@ -90,16 +93,46 @@ class RunViewModel(
         }
     }
 
-    fun startRun(): Boolean {
+    // La pantalla llama esto cuando ya tiene el permiso de ubicación.
+    fun startRun() {
         val state = _uiState.value
-        if (state.phase != RunPhase.PREPARING) return false
+        if (state.phase != RunPhase.PREPARING || state.isStarting) return
         if (state.selectedGuardianIds.isEmpty()) {
             _uiState.update { it.copy(needsGuardian = true) }
-            return false
+            return
         }
-        val session = MockRunRepository.startRun(state.activity, state.selectedGuardianIds)
-            ?: return false
-        _uiState.update { it.copy(phase = RunPhase.ACTIVE, session = session, needsGuardian = false) }
+        _uiState.update {
+            it.copy(isStarting = true, startFailed = false, locationDenied = false, needsGuardian = false)
+        }
+        viewModelScope.launch {
+            // Primero se crea la sesión en Firestore; si falla (sin red o sin permiso), no se inicia.
+            val sessionId = try {
+                trackingRepository.startSession(state.activity, state.selectedGuardianIds)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
+            val session = sessionId?.let {
+                MockRunRepository.startRun(state.activity, state.selectedGuardianIds)
+            }
+            if (sessionId == null || session == null) {
+                sessionId?.let { trackingRepository.finishSession(it, 0.0, 0L) }
+                _uiState.update { it.copy(isStarting = false, startFailed = true) }
+                return@launch
+            }
+            _uiState.update {
+                it.copy(phase = RunPhase.ACTIVE, session = session, sessionId = sessionId, isStarting = false)
+            }
+            startTracking()
+        }
+    }
+
+    fun onLocationDenied() {
+        _uiState.update { it.copy(locationDenied = true) }
+    }
+
+    private fun startTracking() {
         sensorMonitor.start()
         runClock?.cancel()
         runClock = viewModelScope.launch {
@@ -109,7 +142,6 @@ class RunViewModel(
                 _uiState.update { it.copy(session = updated) }
             }
         }
-        return true
     }
 
     fun simulateIncident(type: IncidentType): Boolean {
@@ -162,12 +194,16 @@ class RunViewModel(
         runClock?.cancel()
         alertClock?.cancel()
         sensorMonitor.stop()
-        MockRunRepository.finishRun() ?: return false
+        val finished = MockRunRepository.finishRun() ?: return false
+        _uiState.value.sessionId?.let {
+            trackingRepository.finishSession(it, finished.distanceKm, finished.durationSeconds.toLong())
+        }
         _uiState.update {
             it.copy(
                 phase = RunPhase.PREPARING,
                 selectedGuardianIds = emptySet(),
                 session = null,
+                sessionId = null,
                 incidentType = null,
                 secondsToCancel = 30,
                 alertSent = false

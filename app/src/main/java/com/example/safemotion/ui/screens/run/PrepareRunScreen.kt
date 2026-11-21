@@ -1,5 +1,6 @@
 package com.example.safemotion.ui.screens.run
 
+import android.Manifest
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +25,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.safemotion.R
 import com.example.safemotion.data.model.RunActivityType
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
+private val LocationPermissions = listOf(
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.ACCESS_COARSE_LOCATION
+)
+
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun PrepareRunScreen(
     modifier: Modifier = Modifier,
@@ -34,8 +44,20 @@ fun PrepareRunScreen(
     onInviteGuardians: () -> Unit,
     onPlanRoute: () -> Unit,
     onStartRun: () -> Unit,
+    onLocationDenied: () -> Unit,
     onBack: () -> Unit
 ) {
+    // Sin ubicación no hay seguimiento: el permiso se pide antes de iniciar, igual que en el mapa.
+    val locationPermissions = rememberMultiplePermissionsState(LocationPermissions) { results ->
+        if (results.values.any { it }) onStartRun() else onLocationDenied()
+    }
+    val startWithLocation = {
+        if (locationPermissions.permissions.any { it.status.isGranted }) {
+            onStartRun()
+        } else {
+            locationPermissions.launchMultiplePermissionRequest()
+        }
+    }
     Scaffold(modifier = modifier) { innerPadding ->
         Column(
             modifier = Modifier
@@ -88,7 +110,6 @@ fun PrepareRunScreen(
                     }
                 }
             }
-
             // Sin guardianes aceptados no se puede salir: se invita a buscar uno primero.
             if (uiState.guardiansLoaded && uiState.guardians.isEmpty()) {
                 Text(
@@ -99,18 +120,35 @@ fun PrepareRunScreen(
                     Text(stringResource(R.string.run_invite_guardians))
                 }
             }
-
             if (uiState.needsGuardian) {
                 Text(
                     text = stringResource(R.string.guardian_required),
                     color = MaterialTheme.colorScheme.error
                 )
             }
+            if (uiState.locationDenied) {
+                Text(
+                    text = stringResource(R.string.run_location_required),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            if (uiState.startFailed) {
+                Text(
+                    text = stringResource(R.string.run_start_failed),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
             OutlinedButton(onClick = onPlanRoute, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.plan_route))
             }
-            Button(onClick = onStartRun, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.start_run))
+            Button(
+                onClick = startWithLocation,
+                enabled = !uiState.isStarting,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    stringResource(if (uiState.isStarting) R.string.run_starting else R.string.start_run)
+                )
             }
         }
     }
