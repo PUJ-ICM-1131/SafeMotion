@@ -2,14 +2,13 @@ package com.example.safemotion.data.model
 
 enum class InvitationStatus { PENDING, ACCEPTED, REJECTED }
 
-enum class ActivityType { RUNNING, CYCLING }
-
 data class Contact(
     val id: String,
     val name: String,
     val phone: String
 )
 
+// Una invitación enviada; el id es el del documento en Firestore.
 data class Guardian(
     val id: String,
     val name: String,
@@ -20,8 +19,15 @@ data class Guardian(
 data class ReceivedInvitation(
     val id: String,
     val runnerName: String,
-    val activity: ActivityType,
+    val runnerPhone: String,
     val sentAt: String
+)
+
+// Resultado de invitar: cuántas se enviaron y qué contactos no tienen cuenta en SafeMotion.
+data class InviteResult(
+    val sent: Int,
+    val alreadyInvited: Int,
+    val withoutAccount: List<String>
 )
 
 fun firstNameOf(name: String): String = name.trim().substringBefore(" ")
