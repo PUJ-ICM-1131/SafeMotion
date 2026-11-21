@@ -35,5 +35,45 @@ service cloud.firestore {
 
       allow delete: if signedIn() && resource.data.fromUid == request.auth.uid;
     }
+
+    // Recorridos en tiempo real: los ve el corredor y los guardianes que eligió al iniciar.
+    // Solo el corredor crea y actualiza su sesión.
+    match /sessions/{sessionId} {
+      allow read: if signedIn()
+        && (resource.data.runnerUid == request.auth.uid
+          || request.auth.uid in resource.data.guardianUids);
+
+      allow create: if signedIn() && request.resource.data.runnerUid == request.auth.uid;
+
+      allow update: if signedIn()
+        && resource.data.runnerUid == request.auth.uid
+        && request.resource.data.runnerUid == request.auth.uid;
+
+      allow delete: if signedIn() && resource.data.runnerUid == request.auth.uid;
+
+      // Trazado del recorrido: mismos permisos que la sesión a la que pertenece.
+      match /points/{pointId} {
+        function session() {
+          return get(/databases/$(database)/documents/sessions/$(sessionId)).data;
+        }
+
+        allow read: if signedIn()
+          && (session().runnerUid == request.auth.uid
+            || request.auth.uid in session().guardianUids);
+
+        allow write: if signedIn() && session().runnerUid == request.auth.uid;
+      }
+    }
+
+    // Alertas de caída o inactividad: las crea el corredor y las leen él y sus guardianes.
+    match /alerts/{alertId} {
+      allow read: if signedIn()
+        && (resource.data.runnerUid == request.auth.uid
+          || request.auth.uid in resource.data.guardianUids);
+
+      allow create: if signedIn() && request.resource.data.runnerUid == request.auth.uid;
+
+      allow update, delete: if signedIn() && resource.data.runnerUid == request.auth.uid;
+    }
   }
 }
