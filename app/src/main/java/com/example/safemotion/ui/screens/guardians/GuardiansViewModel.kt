@@ -1,25 +1,56 @@
 package com.example.safemotion.ui.screens.guardians
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.safemotion.data.model.Contact
-import com.example.safemotion.data.repository.MockGuardianRepository
+import com.example.safemotion.data.repository.FirestoreGuardianRepository
+import com.example.safemotion.data.repository.GuardianRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class GuardiansViewModel : ViewModel() {
-    private val todosLosContactos = MockGuardianRepository.deviceContacts
-
-    private val _uiState = MutableStateFlow(
-        GuardiansUiState(
-            guardians = MockGuardianRepository.guardians.value,
-            contacts = todosLosContactos
-        )
-    )
+class GuardiansViewModel(
+    private val repository: GuardianRepository = FirestoreGuardianRepository
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(GuardiansUiState())
     val uiState = _uiState.asStateFlow()
 
+    private var todosLosContactos: List<Contact> = emptyList()
+    private var guardiansJob: Job? = null
+
+    // Se vuelve a suscribir cada vez que se abre la pantalla, por si cambió la sesión.
     fun refresh() {
-        _uiState.update { it.copy(guardians = MockGuardianRepository.guardians.value) }
+        guardiansJob?.cancel()
+        guardiansJob = viewModelScope.launch {
+            repository.guardians()
+                .catch { }
+                .collect { guardians -> _uiState.update { it.copy(guardians = guardians) } }
+        }
+    }
+
+    // Se llama cuando el usuario ya dio el permiso de contactos.
+    fun loadContacts(readContacts: suspend () -> List<Contact>) {
+        _uiState.update { it.copy(isLoadingContacts = true, contactsPermissionDenied = false) }
+        viewModelScope.launch {
+            todosLosContactos = readContacts()
+            _uiState.update {
+                it.copy(
+                    isLoadingContacts = false,
+                    contacts = buscar(it.searchQuery),
+                    selectedContactIds = it.selectedContactIds.filterTo(mutableSetOf()) { id ->
+                        todosLosContactos.any { contact -> contact.id == id }
+                    }
+                )
+            }
+        }
+    }
+
+    fun onContactsPermissionDenied() {
+        _uiState.update { it.copy(isLoadingContacts = false, contactsPermissionDenied = true) }
     }
 
     fun changeSearchQuery(query: String) {
@@ -38,20 +69,33 @@ class GuardiansViewModel : ViewModel() {
         }
     }
 
-    fun sendInvitations(): Boolean {
+    fun sendInvitations() {
         val state = _uiState.value
-        if (state.selectedContactIds.isEmpty()) return false
+        if (state.selectedContactIds.isEmpty() || state.isSending) return
         val elegidos = todosLosContactos.filter { it.id in state.selectedContactIds }
-        MockGuardianRepository.invite(elegidos)
-        _uiState.update {
-            it.copy(
-                guardians = MockGuardianRepository.guardians.value,
-                contacts = todosLosContactos,
-                searchQuery = "",
-                selectedContactIds = emptySet()
-            )
+        _uiState.update { it.copy(isSending = true, inviteFailed = false) }
+        viewModelScope.launch {
+            try {
+                val result = repository.invite(elegidos)
+                _uiState.update {
+                    it.copy(
+                        isSending = false,
+                        inviteResult = result,
+                        contacts = todosLosContactos,
+                        searchQuery = "",
+                        selectedContactIds = emptySet()
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isSending = false, inviteFailed = true) }
+            }
         }
-        return true
+    }
+
+    fun consumeInviteResult() {
+        _uiState.update { it.copy(inviteResult = null, inviteFailed = false) }
     }
 
     fun clearSelection() {
@@ -59,7 +103,9 @@ class GuardiansViewModel : ViewModel() {
             it.copy(
                 contacts = todosLosContactos,
                 searchQuery = "",
-                selectedContactIds = emptySet()
+                selectedContactIds = emptySet(),
+                inviteResult = null,
+                inviteFailed = false
             )
         }
     }
