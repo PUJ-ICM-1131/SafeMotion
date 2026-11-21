@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.example.safemotion.R
 import com.example.safemotion.data.model.RunActivityType
 import com.example.safemotion.data.model.TrackingStatus
-import com.example.safemotion.ui.components.TrackingMap
+import com.example.safemotion.ui.components.RiskOsmMap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,10 +58,24 @@ fun MonitoringScreen(
         }
     ) { innerPadding ->
         val session = uiState.session
-        if (session == null) {
+        if (uiState.isLoading) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (session == null) {
             MissingMonitoringState(modifier = Modifier.fillMaxSize().padding(innerPadding))
         } else {
-            val interrupted = session.status == TrackingStatus.INTERRUPTED
+            // El estado y "hace cuánto" se recalculan con la hora actual, que el ViewModel actualiza.
+            val status = session.statusAt(uiState.nowMillis)
+            val secondsSinceUpdate = session.secondsSinceUpdate(uiState.nowMillis)
+            val interrupted = status == TrackingStatus.INTERRUPTED
+            val location = uiState.address
+                ?: session.lastLocation?.let { stringResource(R.string.monitoring_coordinates, it.latitude, it.longitude) }
+                ?: stringResource(R.string.monitoring_waiting_location)
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -102,12 +117,12 @@ fun MonitoringScreen(
                                         R.string.monitoring_activity_cycling
                                     }
                                 ),
-                                session.location
+                                location
                             )
                         )
                         Text(
                             text = stringResource(
-                                when (session.status) {
+                                when (status) {
                                     TrackingStatus.ACTIVE -> R.string.monitoring_status_active
                                     TrackingStatus.INTERRUPTED -> R.string.monitoring_status_interrupted
                                     TrackingStatus.FINISHED -> R.string.monitoring_status_finished
@@ -135,22 +150,30 @@ fun MonitoringScreen(
                     )
                 }
                 Text(
-                    text = if (session.lastUpdateSeconds < 60) {
+                    text = if (secondsSinceUpdate < 60) {
                         pluralStringResource(
                             R.plurals.monitoring_last_update_seconds,
-                            session.lastUpdateSeconds,
-                            session.lastUpdateSeconds
+                            secondsSinceUpdate,
+                            secondsSinceUpdate
                         )
                     } else {
-                        val minutes = session.lastUpdateSeconds / 60
+                        val minutes = secondsSinceUpdate / 60
                         pluralStringResource(R.plurals.monitoring_last_update_minutes, minutes, minutes)
                     },
                     color = if (interrupted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                TrackingMap(
-                    route = session.route,
-                    interrupted = interrupted,
-                    modifier = Modifier.fillMaxWidth().height(250.dp)
+                // Mapa real con el trazado y la posición del corredor; se mueve con él.
+                RiskOsmMap(
+                    modifier = Modifier.fillMaxWidth().height(320.dp),
+                    zones = emptyList(),
+                    selectedZoneId = null,
+                    onZoneClick = {},
+                    userLocation = session.lastLocation,
+                    userLocationLabel = session.runnerName,
+                    routePoints = session.route,
+                    routeColor = if (interrupted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    fitRoute = false,
+                    followZoom = 16.5
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -159,14 +182,9 @@ fun MonitoringScreen(
                     Icon(Icons.Default.LocationOn, contentDescription = null)
                     Column {
                         Text(stringResource(R.string.monitoring_current_location), style = MaterialTheme.typography.labelLarge)
-                        Text(session.location)
+                        Text(location)
                     }
                 }
-                Text(
-                    stringResource(R.string.monitoring_mock_notice),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall
-                )
                 Button(onClick = onCall, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Call, contentDescription = null)
                     Text(
