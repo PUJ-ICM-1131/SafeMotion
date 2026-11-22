@@ -70,9 +70,24 @@
     <string name="incident_fall">Posible caída</string>
     <string name="incident_inactivity">Posible inactividad</string>
     <string name="alert_countdown">%1$d s</string>
-    <string name="alert_countdown_explanation">Cancela la alerta si estás bien. Al llegar a cero se avisará a los guardianes en esta simulación.</string>
+    <string name="alert_countdown_explanation">Cancela la alerta si estás bien. Al llegar a cero se avisará a tus guardianes.</string>
     <string name="cancel_alert">Estoy bien, cancelar alerta</string>
-    <string name="alert_sent_mock">Alerta confirmada. Los guardianes recibieron un aviso simulado con tu última ubicación.</string>
+    <string name="alert_sent_mock">Alerta registrada. Tus guardianes podrán verla con tu última ubicación.</string>
+    <string name="alert_sending">Registrando la alerta para tus guardianes…</string>
+    <string name="alert_failed">No se pudo registrar la alerta. Inténtalo de nuevo.</string>
+    <string name="alert_retry">Reintentar envío</string>
+    <string name="notification_channel_alerts">Alertas de guardianes</string>
+    <string name="notification_channel_invitations">Invitaciones</string>
+    <string name="notification_unknown_runner">Un corredor</string>
+    <string name="notification_incident_fall">posible caída</string>
+    <string name="notification_incident_inactivity">posible inactividad</string>
+    <string name="notification_incident_other">incidente</string>
+    <string name="notification_alert_title">Alerta de %1$s</string>
+    <string name="notification_alert_body">%1$s: %2$s</string>
+    <string name="notification_invitation_title">Nueva invitación</string>
+    <string name="notification_invitation_body">%1$s te invitó a ser su guardián</string>
+    <string name="notification_alert_listener_error">No se pudo escuchar alerts</string>
+    <string name="notification_invitation_listener_error">No se pudo escuchar invitations</string>
     <string name="return_to_run">Volver al recorrido</string>
 
     <!-- Guardianes (HU-02) -->

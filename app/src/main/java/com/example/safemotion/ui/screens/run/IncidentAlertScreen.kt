@@ -26,7 +26,8 @@ fun IncidentAlertScreen(
     modifier: Modifier = Modifier,
     uiState: RunUiState,
     onCancelAlert: () -> Unit,
-    onReturnToRun: () -> Unit
+    onReturnToRun: () -> Unit,
+    onRetryAlert: () -> Unit
 ) {
     Scaffold(modifier = modifier) { innerPadding ->
         Column(
@@ -60,6 +61,17 @@ fun IncidentAlertScreen(
                 )
                 Button(onClick = onReturnToRun, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.return_to_run))
+                }
+            } else if (uiState.alertSending || uiState.alertFailed) {
+                Text(
+                    text = stringResource(if (uiState.alertSending) R.string.alert_sending else R.string.alert_failed),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(vertical = 28.dp)
+                )
+                if (uiState.alertFailed) {
+                    Button(onClick = onRetryAlert, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.alert_retry))
+                    }
                 }
             } else {
                 Text(

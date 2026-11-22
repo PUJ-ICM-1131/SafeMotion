@@ -25,5 +25,7 @@ data class RunUiState(
     val sensorStatus: SensorStatus = SensorStatus(),
     val incidentType: IncidentType? = null,
     val secondsToCancel: Int = 30,
-    val alertSent: Boolean = false
+    val alertSent: Boolean = false,
+    val alertSending: Boolean = false,
+    val alertFailed: Boolean = false
 )

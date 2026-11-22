@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class RunViewModel(
     private val sensorMonitor: RunSensorMonitor,
@@ -39,6 +40,7 @@ class RunViewModel(
     private var runClock: Job? = null
     private var trackingJob: Job? = null
     private var alertClock: Job? = null
+    private var pendingAlertId: String? = null
 
     // Progreso real del recorrido, calculado con el GPS.
     private var elapsedSeconds = 0L
@@ -200,12 +202,15 @@ class RunViewModel(
         if (_uiState.value.phase != RunPhase.ACTIVE || _uiState.value.session == null) return false
         sensorMonitor.stop()
         alertClock?.cancel()
+        pendingAlertId = UUID.randomUUID().toString()
         _uiState.update {
             it.copy(
                 phase = RunPhase.ALERT,
                 incidentType = type,
                 secondsToCancel = 30,
-                alertSent = false
+                alertSent = false,
+                alertSending = false,
+                alertFailed = false
             )
         }
         alertClock = viewModelScope.launch {
@@ -213,10 +218,34 @@ class RunViewModel(
                 delay(1_000)
                 _uiState.update { it.copy(secondsToCancel = remaining) }
             }
-            MockRunRepository.confirmIncident(type)
-            _uiState.update { it.copy(alertSent = true) }
+            sendAlert()
         }
         return true
+    }
+
+    fun retryAlert() {
+        val state = _uiState.value
+        if (state.phase != RunPhase.ALERT || !state.alertFailed || state.alertSending) return
+        alertClock = viewModelScope.launch { sendAlert() }
+    }
+
+    private suspend fun sendAlert() {
+        val state = _uiState.value
+        val id = pendingAlertId ?: return
+        val sessionId = state.sessionId ?: return
+        val type = state.incidentType ?: return
+        _uiState.update { it.copy(alertSending = true, alertFailed = false) }
+        try {
+            trackingRepository.createAlert(
+                id, sessionId, state.selectedGuardianIds, type, state.currentLocation
+            )
+            MockRunRepository.confirmIncident(type)
+            _uiState.update { it.copy(alertSending = false, alertSent = true) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            _uiState.update { it.copy(alertSending = false, alertFailed = true) }
+        }
     }
 
     fun cancelAlert(): Boolean {
@@ -225,8 +254,10 @@ class RunViewModel(
             return false
         }
         alertClock?.cancel()
+        pendingAlertId = null
         _uiState.update {
-            it.copy(phase = RunPhase.ACTIVE, incidentType = null, secondsToCancel = 30)
+            it.copy(phase = RunPhase.ACTIVE, incidentType = null, secondsToCancel = 30,
+                alertSending = false, alertFailed = false)
         }
         sensorMonitor.start()
         return true
@@ -235,8 +266,10 @@ class RunViewModel(
     fun returnToRun(): Boolean {
         if (_uiState.value.phase != RunPhase.ALERT || !_uiState.value.alertSent) return false
         _uiState.update {
-            it.copy(phase = RunPhase.ACTIVE, incidentType = null, secondsToCancel = 30, alertSent = false)
+            it.copy(phase = RunPhase.ACTIVE, incidentType = null, secondsToCancel = 30,
+                alertSent = false, alertSending = false, alertFailed = false)
         }
+        pendingAlertId = null
         sensorMonitor.start()
         return true
     }
@@ -245,6 +278,7 @@ class RunViewModel(
         if (_uiState.value.phase != RunPhase.ACTIVE) return false
         stopTracking()
         alertClock?.cancel()
+        pendingAlertId = null
         sensorMonitor.stop()
         val finished = MockRunRepository.finishRun() ?: return false
         _uiState.value.sessionId?.let {
@@ -259,7 +293,9 @@ class RunViewModel(
                 currentLocation = null,
                 incidentType = null,
                 secondsToCancel = 30,
-                alertSent = false
+                alertSent = false,
+                alertSending = false,
+                alertFailed = false
             )
         }
         return true
