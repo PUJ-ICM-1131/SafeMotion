@@ -268,7 +268,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                         },
                         onReturnToRun = {
                             if (runViewModel.returnToRun()) backStack.removeLastOrNull()
-                        }
+                        },
+                        onRetryAlert = runViewModel::retryAlert
                     )
                 }
                 GuardiansRoute -> NavEntry(key) {

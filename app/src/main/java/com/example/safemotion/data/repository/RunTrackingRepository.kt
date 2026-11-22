@@ -1,6 +1,7 @@
 package com.example.safemotion.data.repository
 
 import com.example.safemotion.data.model.MapPoint
+import com.example.safemotion.data.model.IncidentType
 import com.example.safemotion.data.model.RunActivityType
 import com.example.safemotion.data.model.TrackingStatus
 import com.google.firebase.Firebase
@@ -14,6 +15,14 @@ import kotlinx.coroutines.tasks.await
 interface RunTrackingRepository {
     /** Crea sessions/{id} con estado ACTIVE y devuelve el id de la sesión. */
     suspend fun startSession(activity: RunActivityType, guardianUids: Set<String>): String
+
+    suspend fun createAlert(
+        alertId: String,
+        sessionId: String,
+        guardianUids: Set<String>,
+        type: IncidentType,
+        location: MapPoint?
+    )
 
     /**
      * Publica una posición: actualiza lastLocation, updatedAt, distancia y tiempo de la sesión y,
@@ -60,6 +69,37 @@ object FirestoreRunTrackingRepository : RunTrackingRepository {
             )
         ).await()
         return session.id
+    }
+
+    override suspend fun createAlert(
+        alertId: String,
+        sessionId: String,
+        guardianUids: Set<String>,
+        type: IncidentType,
+        location: MapPoint?
+    ) {
+        val user = Firebase.auth.currentUser ?: throw IllegalStateException("No hay una sesión iniciada")
+        val session = sessions.document(sessionId).get().await()
+        check(session.exists() && session.getString("runnerUid") == user.uid) {
+            "La sesión no pertenece al corredor"
+        }
+        val savedGuardians = (session.get("guardianUids") as? List<*>)
+            ?.filterIsInstance<String>()?.toSet().orEmpty()
+        val recipients = guardianUids intersect savedGuardians
+        check(recipients.isNotEmpty()) { "La sesión no tiene guardianes aceptados" }
+        val lastLocation = location?.let { GeoPoint(it.latitude, it.longitude) }
+            ?: session.getGeoPoint("lastLocation")
+        val alert = mutableMapOf<String, Any>(
+            "sessionId" to sessionId,
+            "runnerUid" to user.uid,
+            "runnerName" to session.getString("runnerName").orEmpty(),
+            "runnerPhone" to session.getString("runnerPhone").orEmpty(),
+            "guardianUids" to recipients.toList(),
+            "type" to type.name,
+            "createdAt" to FieldValue.serverTimestamp()
+        )
+        lastLocation?.let { alert["location"] = it }
+        db.collection(FirestoreGuardianTrackingRepository.ALERTS).document(alertId).set(alert).await()
     }
 
     override fun publishPosition(

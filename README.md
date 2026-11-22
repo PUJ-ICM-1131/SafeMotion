@@ -1,7 +1,7 @@
 # SafeMotion
 Safe Motion - Equipo 2 - Nexo Móvil.
 
-Aplicación Android de acompañamiento para corredores y ciclistas. Esta versión corresponde a la Entrega 2: funciona para un usuario y mantiene datos de prueba para guardianes y alertas recibidas.
+Aplicación Android de acompañamiento para corredores y ciclistas. En la Entrega 3, el corredor y el guardián usan cuentas distintas y comparten invitaciones, recorridos y alertas mediante Cloud Firestore.
 
 ## Ejecutar
 Abrir esta carpeta en Android Studio, instalar el SDK 37 y sincronizar Gradle. Ejecutar `app` en un emulador o dispositivo con Android 7.0 (API 24) o superior.
@@ -26,6 +26,6 @@ Desde Inicio puedes abrir el mapa de riesgos, permitir la ubicación y crear un 
 
 Para probar los sensores, selecciona al menos un guardián e inicia un recorrido. El acelerómetro y el giroscopio pueden activar una alerta de caída o inactividad; hay 30 segundos para cancelarla. Los botones de simulación permiten mostrar el flujo sin provocar una caída real.
 
-El GPS, el tiempo y la distancia mostrados durante el recorrido activo siguen simulados; la ubicación real se usa en el mapa, los reportes y la planeación de rutas. Los guardianes, sus avisos y los reportes comunitarios no se sincronizan entre usuarios. La detección por sensores se ha probado con la app abierta, no con la pantalla bloqueada.
+El recorrido publica ubicación, tiempo y distancia reales en Firestore para los guardianes aceptados. Tras confirmar un incidente se registra una alerta compartida. Las notificaciones del sistema para alertas e invitaciones dependen de que el proceso de la app del guardián siga activo y de que tenga permiso; los datos permanecen consultables en la app. Los reportes comunitarios no se sincronizan entre usuarios. La detección por sensores se ha probado con la app abierta, no con la pantalla bloqueada.
 
 La implementación y los diagramas están en la [wiki](https://github.com/PUJ-ICM-1131/SafeMotion/wiki).

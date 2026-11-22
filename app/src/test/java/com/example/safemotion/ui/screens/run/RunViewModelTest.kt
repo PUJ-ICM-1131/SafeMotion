@@ -170,6 +170,7 @@ class RunViewModelTest {
         advanceTimeBy(30_000)
         runCurrent()
         assertTrue(MockRunRepository.confirmedIncidents.value.isEmpty())
+        assertTrue(tracking.alerts.isEmpty())
         assertEquals(RunPhase.ACTIVE, viewModel.uiState.value.phase)
         assertTrue(viewModel.finishRun())
     }
@@ -190,6 +191,39 @@ class RunViewModelTest {
         assertFalse(viewModel.cancelAlert())
         assertFalse(viewModel.finishRun())
         assertEquals(IncidentType.INACTIVITY, MockRunRepository.confirmedIncidents.value.single().type)
+        assertEquals(1, tracking.alerts.size)
+        assertEquals("session-1", tracking.alerts.single().sessionId)
+        assertEquals(setOf("uid-laura"), tracking.alerts.single().guardians)
+        assertEquals(IncidentType.INACTIVITY, tracking.alerts.single().type)
+        assertTrue(viewModel.returnToRun())
+        assertTrue(viewModel.finishRun())
+    }
+
+    @Test
+    fun failedAlertCanBeRetriedWithoutChangingItsId() = runTest {
+        val viewModel = newViewModel()
+        viewModel.toggleGuardian("uid-laura")
+        viewModel.startRun()
+        runCurrent()
+        tracking.failOnAlert = true
+        assertTrue(viewModel.simulateIncident(IncidentType.FALL))
+        runCurrent()
+        advanceTimeBy(30_000)
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.alertFailed)
+        assertFalse(viewModel.uiState.value.alertSent)
+        assertTrue(MockRunRepository.confirmedIncidents.value.isEmpty())
+        assertFalse(viewModel.cancelAlert())
+
+        tracking.failOnAlert = false
+        viewModel.retryAlert()
+        runCurrent()
+        assertTrue(viewModel.uiState.value.alertSent)
+        assertEquals(2, tracking.alertAttempts.size)
+        assertEquals(1, tracking.alertAttempts.map { it.alertId }.distinct().size)
+        assertEquals(1, tracking.alerts.size)
+        assertEquals(1, MockRunRepository.confirmedIncidents.value.size)
         assertTrue(viewModel.returnToRun())
         assertTrue(viewModel.finishRun())
     }
@@ -231,17 +265,40 @@ class RunViewModelTest {
     }
 
     private data class Published(val point: MapPoint, val distanceKm: Double, val addToRoute: Boolean)
+    private data class AlertWrite(
+        val alertId: String,
+        val sessionId: String,
+        val guardians: Set<String>,
+        val type: IncidentType,
+        val location: MapPoint?
+    )
 
     private class FakeRunTrackingRepository : RunTrackingRepository {
         val started = mutableListOf<Pair<RunActivityType, Set<String>>>()
         val published = mutableListOf<Published>()
         val finished = mutableListOf<String>()
+        val alerts = mutableListOf<AlertWrite>()
+        val alertAttempts = mutableListOf<AlertWrite>()
         var failOnStart = false
+        var failOnAlert = false
 
         override suspend fun startSession(activity: RunActivityType, guardianUids: Set<String>): String {
             if (failOnStart) throw IllegalStateException("Sin red")
             started += activity to guardianUids
             return "session-${started.size}"
+        }
+
+        override suspend fun createAlert(
+            alertId: String,
+            sessionId: String,
+            guardianUids: Set<String>,
+            type: IncidentType,
+            location: MapPoint?
+        ) {
+            val write = AlertWrite(alertId, sessionId, guardianUids, type, location)
+            alertAttempts += write
+            if (failOnAlert) throw IllegalStateException("Sin red")
+            alerts += write
         }
 
         override fun publishPosition(
